@@ -1,0 +1,2 @@
+# Add your Massive API key here and rename this file to config.properties
+api.key=YOUR_KEY_HERE
