@@ -47,7 +47,7 @@ public class MassiveClientWrapper {
         // Build the URL (Note: Massive API usually requires the key in the URL or Header)
         String url = "https://api.massive.com/v3/reference/dividends?apiKey=" + apiKey;
 
-        // 3. Prepare the Request
+        // Prepare the Request
         Request request = new Request.Builder()
                 .url(url)
                 .build();
