@@ -21,7 +21,9 @@ public class FinnhubClient {
 
     public FinnhubClient(String apiKey) {
         this.apiKey = apiKey;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
         this.gson = new GsonBuilder().setPrettyPrinting().create();
     }
 
@@ -56,6 +58,7 @@ public class FinnhubClient {
         String url = BASE_URL + endpoint
                 + (endpoint.contains("?") ? "&" : "?")
                 + "token=" + apiKey;
+
 
         try {
             HttpRequest request = HttpRequest.newBuilder()

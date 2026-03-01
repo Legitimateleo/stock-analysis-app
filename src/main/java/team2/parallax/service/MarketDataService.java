@@ -15,34 +15,37 @@ public class MarketDataService {
         this.client = client;
     }
 
-    public JsonObject getMarketData(String symbol) {
-        return client.get("/quote?symbol=" + symbol);
+    public JsonObject getQuote(String symbol) {
+        return client.get("quote?symbol=" + symbol);
     }
 
     public JsonObject getCompanyProfile(String symbol) {
-        return client.get("/company/profile?symbol=" + symbol);
+        return client.get("stock/profile2?symbol=" + symbol);
     }
 
     public JsonObject getFinancialMetrics(String symbol) {
-        return client.get("/stock/metric?symbol=" + symbol);
+        return client.get("stock/metric?symbol=" + symbol);
     }
 
-    public JsonObject getCandles(String symbol) {
-        return client.get("/stock/candle?symbol=" + symbol);
-    }
-
-    public JsonObject getCompanyNews(String symbol, String from, String to) {
-        return client.get("/stock/company-news?symbol=" + symbol
+    public JsonObject getCandles(String symbol, long from, long to) {
+        return client.get("stock/candle?symbol=" + symbol
                 + "&from=" + from + "&to=" + to);
     }
 
+    public JsonArray getCompanyNews(String symbol, String from, String to) {
+        String raw = client.getRaw("company-news?symbol=" + symbol
+                + "&from=" + from + "&to=" + to);
+        if (raw == null) return null;
+        return gson.fromJson(raw, JsonArray.class);
+    }
+
     public JsonObject getInsiderSentiment(String symbol, String from, String to) {
-        return client.get("/stock/insider-sentiment?symbol=" + symbol
+        return client.get("stock/insider-sentiment?symbol=" + symbol
                 + "&from=" + from + "&to=" + to);
     }
 
     public JsonObject getInsiderTransactions(String symbol){
-        return client.get("/stock/insider-transactions?symbol=" + symbol);
+        return client.get("stock/insider-transactions?symbol=" + symbol);
     }
 }
 
