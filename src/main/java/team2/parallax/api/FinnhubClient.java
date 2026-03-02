@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 public class FinnhubClient {
 
     private static final String BASE_URL = "https://finnhub.io/api/v1/";
-    private static final long MIN_DELAY_MS = 200;
+    private static final long MIN_DELAY_MS = 1000;
 
     private final String apiKey;
     private final HttpClient httpClient;

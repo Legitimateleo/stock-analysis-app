@@ -4,6 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import team2.parallax.api.FinnhubClient;
+import team2.parallax.data.Fortune500;
+import team2.parallax.model.StockSnapshot;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MarketDataService {
@@ -47,6 +51,84 @@ public class MarketDataService {
     public JsonObject getInsiderTransactions(String symbol){
         return client.get("stock/insider-transactions?symbol=" + symbol);
     }
+
+    public Fortune500 search(String input) {
+        String normalized = input.trim().toUpperCase();
+
+        for (Fortune500 stock : Fortune500.values()) {
+            if(stock.name().equals(normalized)) {
+                return stock;
+            }
+            if(stock.getCompanyName().toUpperCase().contains(normalized)) {
+                return stock;
+            }
+        }
+        return null;
+    }
+
+    public List<Fortune500> getByIndustry(Fortune500 stock) {
+        List<Fortune500> related = new ArrayList<>();
+        for (Fortune500 s :  Fortune500.values()) {
+            if(s.getIndustry().equals(stock.getIndustry())) {
+                related.add(s);
+            }
+        }
+        return related;
+    }
+
+    public StockSnapshot getSnapshot(Fortune500 stock) {
+        String symbol = stock.name();
+
+        //calling quote data
+        JsonObject quoteData = getQuote(symbol);
+        double currentPrice = quoteData != null ? quoteData.get("c").getAsDouble() : 0;
+
+        //Company Profile Data
+        JsonObject profileData = getCompanyProfile(symbol);
+        String companyName = "N/A", country = "N/A", logo = "N/A", ticker = symbol;
+        if (profileData != null) {
+            if (profileData.has("name") && !profileData.get("name").isJsonNull())
+                companyName = profileData.get("name").getAsString();
+            if (profileData.has("country") && !profileData.get("country").isJsonNull())
+                country = profileData.get("country").getAsString();
+            if (profileData.get("logo") != null && !profileData.get("logo").isJsonNull())
+                logo = profileData.get("logo").getAsString();
+            if (profileData.get("ticker") != null && !profileData.get("ticker").isJsonNull())
+                ticker = profileData.get("ticker").getAsString();
+        }
+
+        //metrics Data
+        JsonObject metricsData = getFinancialMetrics(symbol);
+        double peRatio = 0, priceToBook = 0, dividendYield = 0, weekHigh52 = 0, weekLow52 = 0;
+        if (metricsData != null) {
+            JsonObject m = metricsData.getAsJsonObject("metric");
+            if (m != null) {
+                peRatio = getMetricValue(m, "peBasicExclExtraTTM");
+                priceToBook = getMetricValue(m, "pbAnnual");
+                dividendYield = getMetricValue(m, "currentDividendYieldTTM");
+                weekHigh52 = getMetricValue(m, "52WeekHigh");
+                weekLow52 = getMetricValue(m, "52WeekLow");
+            }
+        }
+        List<Fortune500> relatedStocks = getByIndustry(stock);
+        return new StockSnapshot(stock, companyName, currentPrice, ticker,
+                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks);
+    }
+    public StockSnapshot lookup(String input) {
+        Fortune500 stock = search(input);
+        if (stock == null) return null;
+        return getSnapshot(stock);
+    }
+
+    private double getMetricValue(JsonObject metrics, String key) {
+        if (metrics.has(key) && !metrics.get(key).isJsonNull()) {
+            return metrics.get(key).getAsDouble();
+        }
+        return 0;
+    }
 }
+
+
+
 
 
