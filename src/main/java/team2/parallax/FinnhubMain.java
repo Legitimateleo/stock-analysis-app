@@ -33,7 +33,7 @@ public class FinnhubMain {
         MarketDataService marketData = new MarketDataService(client);
 
         // hardcoded user input. this will be used for GUI
-        String userInput = "adbe";
+        String userInput = "nvidia";
 
         System.out.println("Searching for: " + userInput);
         //connects the snapshot method (the bundler) with the marketDataServices file utilizing the userInput to search
