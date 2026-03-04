@@ -11,8 +11,9 @@ import java.util.List;
 
 
 public class MarketDataService {
-
+    //calls client class to connect the methods here to the endpoints
     private final FinnhubClient client;
+    //method that converts java objects into readable Json packages
     private final Gson gson = new Gson();
 
     public MarketDataService(FinnhubClient client) {
@@ -59,6 +60,7 @@ public class MarketDataService {
             if(stock.name().equals(normalized)) {
                 return stock;
             }
+            //
             if(stock.getCompanyName().toUpperCase().contains(normalized)) {
                 return stock;
             }
@@ -69,7 +71,7 @@ public class MarketDataService {
     public List<Fortune500> getByIndustry(Fortune500 stock) {
         List<Fortune500> related = new ArrayList<>();
         for (Fortune500 s :  Fortune500.values()) {
-            if(s.getIndustry().equals(stock.getIndustry())) {
+            if(s != stock && s.getIndustry().equals(stock.getIndustry())) {
                 related.add(s);
             }
         }

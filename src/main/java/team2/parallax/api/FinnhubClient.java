@@ -10,15 +10,20 @@ import java.net.http.HttpResponse;
 
 public class FinnhubClient {
 
+    //string that is the foundation url in which we add more things to get specific data
     private static final String BASE_URL = "https://finnhub.io/api/v1/";
+    //delay of requests to abide by free tier plan
     private static final long MIN_DELAY_MS = 200;
 
+    //sting to mask API key
     private final String apiKey;
+
     private final HttpClient httpClient;
     private final Gson gson;
+    //request time counter
     private long lastRequestTime = 0;
 
-
+    //constructor for client
     public FinnhubClient(String apiKey) {
         this.apiKey = apiKey;
         this.httpClient = HttpClient.newBuilder()
@@ -39,7 +44,7 @@ public class FinnhubClient {
         }
     }
 
-    //Returns raw JSON string used for endpoints that reuturn arrays (COMPANY NEWS)
+    //Returns raw JSON string used for endpoints that reuturns arrays (COMPANY NEWS endpoint)
     public String getRaw(String endpoint) {
 
         //rate limiting
@@ -52,6 +57,7 @@ public class FinnhubClient {
                 Thread.currentThread().interrupt();
             }
         }
+        //updates the counter.
         lastRequestTime = System.currentTimeMillis();
 
         //Build URL
@@ -71,6 +77,8 @@ public class FinnhubClient {
                     request, HttpResponse.BodyHandlers.ofString()
             );
 
+            //gets the reason why there is an error
+            //checks for 3 different status codes. then responds with a message catered to the status error recieved.
             int status = response.statusCode();
             if (status == 200) return response.body();
             else if (status == 429) System.out.println("RATE LIMITED -- wait and retry");
