@@ -29,6 +29,7 @@ public class MainWindow extends Application {
     private ImageView logoView;
     private Label companyNameLabel;
     private Label tickerLabel;
+    private Label industryLabel;
     private Label countryLabel;
     private Label currentPriceLabel;
     private Label peRatioLabel;
@@ -39,6 +40,7 @@ public class MainWindow extends Application {
     private VBox resultsPanel;
     private FlowPane relatedStocksPane;
     private Label errorLabel;
+    private TextField searchField;
 
     @Override
     public void init() throws Exception {
@@ -66,7 +68,7 @@ public class MainWindow extends Application {
         title.setStyle("-fx-text-fill: #1a1a2e;");
 
         // ── Search bar ────────────────────────────────────────────────
-        TextField searchField = new TextField();
+        searchField = new TextField();
         searchField.setPromptText("Search by ticker or company name...");
         searchField.setPrefWidth(350);
         searchField.setStyle("-fx-font-size: 14px; -fx-padding: 8px;");
@@ -109,12 +111,21 @@ public class MainWindow extends Application {
         companyNameLabel.setStyle("-fx-text-fill: #1a1a2e;");
 
         tickerLabel = new Label();
-        tickerLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 14px;");
+        tickerLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
+
+        industryLabel = new Label();
+        industryLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
+
+        Label tickerIndustrySeparator = new Label("·");
+        tickerIndustrySeparator.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 13px;");
+
+        HBox tickerIndustryRow = new HBox(6, tickerLabel, tickerIndustrySeparator, industryLabel);
+        tickerIndustryRow.setAlignment(Pos.CENTER_LEFT);
 
         countryLabel = new Label();
         countryLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
 
-        VBox companyInfo = new VBox(4, companyNameLabel, tickerLabel, countryLabel);
+        VBox companyInfo = new VBox(4, companyNameLabel, tickerIndustryRow, countryLabel);
         companyInfo.setAlignment(Pos.CENTER_LEFT);
 
         HBox companyRow = new HBox(15, logoView, companyInfo);
@@ -219,6 +230,7 @@ public class MainWindow extends Application {
         // Company info
         companyNameLabel.setText(snapshot.getCompanyName());
         tickerLabel.setText(snapshot.getTicker());
+        industryLabel.setText(snapshot.getStock().getIndustry());
         countryLabel.setText(snapshot.getCountry());
 
         // Metrics
@@ -241,6 +253,10 @@ public class MainWindow extends Application {
                     -fx-font-size: 12px;
                     -fx-cursor: hand;
                     """);
+            chip.setOnMouseClicked(e -> {
+                searchField.setText(related.name());
+                handleSearch(related.name());
+            });
             relatedStocksPane.getChildren().add(chip);
         }
     }
