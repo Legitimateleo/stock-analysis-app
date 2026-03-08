@@ -16,11 +16,13 @@ public class StockSnapshot {
     private final double weekHigh52;
     private final double weekLow52;
     private final List<Fortune500> relatedStocks;
+    private final List<RecommendationTrends>  recommendationTrends;
 
     public StockSnapshot(Fortune500 stock, String companyName, double currentPrice,
                          String ticker, String country, String logo, double peRatio,
                          double priceToBook, double dividendYield,
-                         double weekHigh52, double weekLow52, List<Fortune500> relatedStocks) {
+                         double weekHigh52, double weekLow52, List<Fortune500> relatedStocks,
+                         List<RecommendationTrends> recommendationTrends) {
 
         this.stock = stock;
         this.companyName = companyName;
@@ -34,6 +36,7 @@ public class StockSnapshot {
         this.weekHigh52 = weekHigh52;
         this.weekLow52 = weekLow52;
         this.relatedStocks = relatedStocks;
+        this.recommendationTrends = recommendationTrends;
     }
 
     public Fortune500 getStock()       { return stock; }
@@ -48,6 +51,7 @@ public class StockSnapshot {
     public double getWeekHigh52()      { return weekHigh52; }
     public double getWeekLow52()       { return weekLow52; }
     public List<Fortune500> getRelatedStocks() { return relatedStocks; }
+    public List<RecommendationTrends> getRecommendationTrends() {return recommendationTrends;}
 
     @Override
     public String toString() {

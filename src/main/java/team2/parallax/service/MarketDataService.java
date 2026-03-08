@@ -4,10 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import team2.parallax.api.FinnhubClient;
+import team2.parallax.model.RecommendationTrends;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.StockSnapshot;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.gson.JsonElement;
 
 
 public class MarketDataService {
@@ -30,6 +32,12 @@ public class MarketDataService {
 
     public JsonObject getFinancialMetrics(String symbol) {
         return client.get("stock/metric?symbol=" + symbol);
+    }
+
+    public JsonArray getRecommendationTrends(String symbol) {
+        String raw = client.getRaw("stock/recommendation?symbol=" + symbol);
+        if (raw == null) return null;
+        return gson.fromJson(raw, JsonArray.class);
     }
 
     public JsonObject getCandles(String symbol, long from, long to) {
@@ -78,6 +86,26 @@ public class MarketDataService {
         return related;
     }
 
+    private List<RecommendationTrends> getTrends(Fortune500 stock) {
+        List<RecommendationTrends> trends = new ArrayList<>();
+        JsonArray trendsData = getRecommendationTrends(stock.name());
+        if(trendsData == null) return trends;
+
+        for (JsonElement elem : trendsData) {
+            JsonObject t = elem.getAsJsonObject();
+            trends.add(new RecommendationTrends(
+                    t.has("buy")        ? t.get("buy").getAsInt()        : 0,
+                    t.has("hold")       ? t.get("hold").getAsInt()       : 0,
+                    t.has("period")     ? t.get("period").getAsString()  : "N/A",
+                    t.has("sell")       ? t.get("sell").getAsInt()       : 0,
+                    t.has("strongBuy")  ? t.get("strongBuy").getAsInt()  : 0,
+                    t.has("strongSell") ? t.get("strongSell").getAsInt() : 0
+            ));
+        }
+        return trends;
+    }
+
+
     public StockSnapshot getSnapshot(Fortune500 stock) {
         String symbol = stock.name();
 
@@ -113,9 +141,11 @@ public class MarketDataService {
             }
         }
         List<Fortune500> relatedStocks = getByIndustry(stock);
+        List<RecommendationTrends> trends = getTrends(stock);
         return new StockSnapshot(stock, companyName, currentPrice, ticker,
-                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks);
+                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks, trends);
     }
+
     public StockSnapshot lookup(String input) {
         Fortune500 stock = search(input);
         if (stock == null) return null;
