@@ -65,14 +65,17 @@ public class MarketDataService {
         String normalized = input.trim().toUpperCase();
 
         for (Fortune500 stock : Fortune500.values()) {
-            if(stock.name().equals(normalized)) {
-                return stock;
-            }
-            //
-            if(stock.getCompanyName().toUpperCase().contains(normalized)) {
+            if (stock.name().equals(normalized)) {
                 return stock;
             }
         }
+
+        for (Fortune500 stock : Fortune500.values()) {
+            if (stock.getCompanyName().toUpperCase().contains(normalized)) {
+                return stock;
+            }
+        }
+
         return null;
     }
 
