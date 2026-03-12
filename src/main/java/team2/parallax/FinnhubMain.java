@@ -24,7 +24,7 @@ public class FinnhubMain {
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
 
-        StockSnapshot snapshot = marketData.lookup("CAT");
+        StockSnapshot snapshot = marketData.lookup("MU");
         if (snapshot != null) {
             System.out.println("\n── Recommendation Trends ──");
             for (RecommendationTrends trend : snapshot.getRecommendationTrends()) {

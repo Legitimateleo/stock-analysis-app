@@ -13,7 +13,7 @@ public class FinnhubClient {
     //string that is the foundation url in which we add more things to get specific data
     private static final String BASE_URL = "https://finnhub.io/api/v1/";
     //delay of requests to abide by free tier plan
-    private static final long MIN_DELAY_MS = 200;
+    private static final long MIN_DELAY_MS = 1000;
 
     //sting to mask API key
     private final String apiKey;
