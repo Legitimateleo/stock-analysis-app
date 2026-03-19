@@ -6,7 +6,8 @@ import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
 import team2.parallax.ui.MainWindow;
-
+import team2.parallax.service.CalculationMethods;
+import team2.parallax.service.ValidationScore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -24,13 +25,16 @@ public class FinnhubMain {
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
 
-        StockSnapshot snapshot = marketData.lookup("CAT");
+        StockSnapshot snapshot = marketData.lookup("CI");
         if (snapshot != null) {
-            System.out.println("\n── Recommendation Trends ──");
-            for (RecommendationTrends trend : snapshot.getRecommendationTrends()) {
-                System.out.println(trend.toString());
-            }
+            System.out.println("\n── Sector P/E Test ──");
+            System.out.println("CIGNA P/E:          " + snapshot.getPeRatio());
+            System.out.println("Sector Average P/E: " + snapshot.getSectorAveragePE());
+            System.out.println("Free Cash Flow/Share: " + snapshot.getFreeCashFlowPerShare());
         }
+        CalculationMethods calculator = new CalculationMethods();
+        ValidationScore validationScore = new ValidationScore(calculator);
+        validationScore.printSummary(snapshot);
 
         // ── Launch GUI ───────────────────────────────────────────────
         Application.launch(MainWindow.class, args);

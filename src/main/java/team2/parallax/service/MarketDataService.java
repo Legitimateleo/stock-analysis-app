@@ -132,7 +132,7 @@ public class MarketDataService {
 
         //metrics Data
         JsonObject metricsData = getFinancialMetrics(symbol);
-        double peRatio = 0, priceToBook = 0, dividendYield = 0, weekHigh52 = 0, weekLow52 = 0;
+        double peRatio = 0, priceToBook = 0, dividendYield = 0, weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
         if (metricsData != null) {
             JsonObject m = metricsData.getAsJsonObject("metric");
             if (m != null) {
@@ -141,12 +141,14 @@ public class MarketDataService {
                 dividendYield = getMetricValue(m, "currentDividendYieldTTM");
                 weekHigh52 = getMetricValue(m, "52WeekHigh");
                 weekLow52 = getMetricValue(m, "52WeekLow");
+                freeCashFlowPerShare = getMetricValue(m, "cashFlowPerShareTTM");
             }
         }
         List<Fortune500> relatedStocks = getByIndustry(stock);
         List<RecommendationTrends> trends = getTrends(stock);
+        double sectorAveragePE = getSectorAveragePE(stock);
         return new StockSnapshot(stock, companyName, currentPrice, ticker,
-                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks, trends);
+                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks, trends, freeCashFlowPerShare, sectorAveragePE);
     }
 
     public StockSnapshot lookup(String input) {
@@ -161,7 +163,32 @@ public class MarketDataService {
         }
         return 0;
     }
+
+    public double getSectorAveragePE(Fortune500 stock){
+        List<Fortune500> peers = getByIndustry(stock);
+
+        double total = 0;
+        int count = 0;
+
+        for (Fortune500 peer : peers) {
+            JsonObject metrics = getFinancialMetrics(peer.name());
+            if (metrics == null) continue;
+
+            JsonObject m = metrics.getAsJsonObject("metric");
+            if (m == null) continue;
+
+            double pe = getMetricValue(m, "peBasicExclExtraTTM");
+            if (pe >0) {
+                total += pe;
+                count++;
+            }
+        }
+        //returns total sum of PE in the sector and divides it by the number of companies within that sector
+        //also ensures count is greater than 0.
+        return count > 0 ? total / count : 0;
+    }
 }
+
 
 
 
