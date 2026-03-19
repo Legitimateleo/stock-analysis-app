@@ -5,6 +5,7 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.layout.Region;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -13,12 +14,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import team2.parallax.api.FinnhubClient;
+import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
 public class MainWindow extends Application {
@@ -41,10 +44,10 @@ public class MainWindow extends Application {
     private FlowPane relatedStocksPane;
     private Label errorLabel;
     private TextField searchField;
+    private Region recommendationChart;
 
     @Override
     public void init() throws Exception {
-        // ── Load API key and wire up service ─────────────────────────
         Properties config = new Properties();
         try (InputStream input = getClass()
                 .getClassLoader().getResourceAsStream("config.properties")) {
@@ -163,13 +166,18 @@ public class MainWindow extends Application {
         relatedStocksPane.setHgap(8);
         relatedStocksPane.setVgap(8);
 
+        recommendationChart = new Pane();
+        recommendationChart.setVisible(false);
+
         resultsPanel.getChildren().addAll(
                 companyRow,
                 new Separator(),
                 metricsGrid,
                 separator,
                 relatedTitle,
-                relatedStocksPane
+                relatedStocksPane,
+                new Separator(),
+                recommendationChart
         );
 
         // ── Wire search action ────────────────────────────────────────
@@ -179,8 +187,10 @@ public class MainWindow extends Application {
         // ── Assemble root ─────────────────────────────────────────────
         root.getChildren().addAll(title, searchBar, errorLabel, resultsPanel);
 
-        Scene scene = new Scene(root, 700, 600);
+        Scene scene = new Scene(root, 800, 950);
         stage.setTitle("Parallax");
+        stage.setMinWidth(800);
+        stage.setMinHeight(950);
         stage.setScene(scene);
         stage.show();
     }
@@ -191,7 +201,6 @@ public class MainWindow extends Application {
         errorLabel.setVisible(false);
         resultsPanel.setVisible(false);
 
-        // Run search on background thread to avoid freezing UI
         Task<StockSnapshot> task = new Task<>() {
             @Override
             protected StockSnapshot call() {
@@ -258,6 +267,19 @@ public class MainWindow extends Application {
                 handleSearch(related.name());
             });
             relatedStocksPane.getChildren().add(chip);
+        }
+
+        // Recommendation trends chart
+        List<RecommendationTrends> trends = snapshot.getRecommendationTrends();
+        if (trends != null && !trends.isEmpty()) {
+            int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
+            recommendationChart = RecommendationTrendsChart.build(trends, snapshot.getTicker());
+            if (chartIndex >= 0) {
+                resultsPanel.getChildren().set(chartIndex, recommendationChart);
+            }
+            recommendationChart.setVisible(true);
+        } else {
+            recommendationChart.setVisible(false);
         }
     }
 
