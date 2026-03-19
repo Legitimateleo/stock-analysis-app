@@ -24,14 +24,10 @@ public class FinnhubMain {
         String apiKey = config.getProperty("FINNHUB_API_KEY");
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
-
-<<<<<<< HEAD
-        StockSnapshot snapshot = marketData.lookup("CI");
-=======
->>>>>>> main
+        StockSnapshot snapshot = marketData.lookup("QCOM");
         if (snapshot != null) {
             System.out.println("\n── Sector P/E Test ──");
-            System.out.println("CIGNA P/E:          " + snapshot.getPeRatio());
+            System.out.println("QCOM P/E:          " + snapshot.getPeRatio());
             System.out.println("Sector Average P/E: " + snapshot.getSectorAveragePE());
             System.out.println("Free Cash Flow/Share: " + snapshot.getFreeCashFlowPerShare());
         }
