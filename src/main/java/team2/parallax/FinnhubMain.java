@@ -25,7 +25,10 @@ public class FinnhubMain {
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
 
+<<<<<<< HEAD
         StockSnapshot snapshot = marketData.lookup("CI");
+=======
+>>>>>>> main
         if (snapshot != null) {
             System.out.println("\n── Sector P/E Test ──");
             System.out.println("CIGNA P/E:          " + snapshot.getPeRatio());
