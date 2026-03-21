@@ -5,7 +5,8 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.layout.Region;
+import javafx.scene.Node;
+import java.util.Set;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -20,7 +21,7 @@ import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
 import team2.parallax.service.ValidationScore;
 
-import javafx.scene.chart.BarChart;
+import javafx.scene.chart.StackedBarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -50,7 +51,7 @@ public class MainWindow extends Application {
     private FlowPane relatedStocksPane;
     private Label errorLabel;
     private TextField searchField;
-    private BarChart<String, Number> recommendationChart;
+    private StackedBarChart<String, Number> recommendationChart;
     private Button trendsButton;
     private Button calculateButton;
     private Label finalScoreLabel;
@@ -218,9 +219,9 @@ public class MainWindow extends Application {
         xAxis.setLabel("Period");
         yAxis.setLabel("# Analysts");
 
-        recommendationChart = new BarChart<>(xAxis, yAxis);
-        recommendationChart.setTitle("Analyst Recommendations");
-        recommendationChart.setPrefHeight(300);
+        recommendationChart = new StackedBarChart<>(xAxis, yAxis);
+        recommendationChart.setTitle(" Recommendation Trends");
+        recommendationChart.setPrefHeight(400);
         recommendationChart.setAnimated(false);
         recommendationChart.setVisible(false);
         recommendationChart.setStyle("""
@@ -318,6 +319,8 @@ public class MainWindow extends Application {
             List<RecommendationTrends> trends = task.getValue();
             if (trends != null && !trends.isEmpty()) {
                 recommendationChart.getData().clear();
+                recommendationChart.setTitle(currentStock.name() + " Recommendation Trends");
+                recommendationChart.setPrefHeight(400);
 
                 XYChart.Series<String, Number> strongBuySeries  = new XYChart.Series<>();
                 XYChart.Series<String, Number> buySeries        = new XYChart.Series<>();
@@ -343,16 +346,28 @@ public class MainWindow extends Application {
                 recommendationChart.getData().addAll(
                         strongBuySeries, buySeries, holdSeries, sellSeries, strongSellSeries
                 );
-                // style each series with distinct colors
-                String[] colors = {"#2ecc71", "#27ae60", "#f39c12", "#e74c3c", "#c0392b"};
+
+                // ── Apply colors after nodes are rendered ─────────────────
+                String[] colors = {"#006400", "#90EE90", "#FFFF00", "#FFA500", "#FF0000"};
                 for (int i = 0; i < recommendationChart.getData().size(); i++) {
                     XYChart.Series<String, Number> series = recommendationChart.getData().get(i);
                     for (XYChart.Data<String, Number> data : series.getData()) {
-                        data.getNode().setStyle(
-                                "-fx-bar-fill: " + colors[i] + ";"
-                        );
+                        if (data.getNode() != null) {
+                            data.getNode().setStyle("-fx-bar-fill: " + colors[i] + ";");
+                        }
                     }
                 }
+                // ── Apply legend colors via CSS ───────────────────────────
+                String[] cssColors = {"#2ecc71", "#27ae60", "#f39c12", "#e74c3c", "#c0392b"};
+                Set<Node> legendItems = recommendationChart.lookupAll(".chart-legend-item-symbol");
+                int i = 0;
+                for (Node legendItem : legendItems) {
+                    if (i < cssColors.length) {
+                        legendItem.setStyle("-fx-background-color: " + cssColors[i] + ";");
+                        i++;
+                    }
+                }
+
                 recommendationChart.setVisible(true);
             }
         });
@@ -422,15 +437,15 @@ public class MainWindow extends Application {
         String signal = valuation.getSignal(currentStock, currentSnapshot);
 
         finalScoreLabel.setText(String.format("Score: %.2f / 10", score));
-
+        //#2ecc71", "#27ae60", "#f39c12", "#e74c3c", "#c0392b"
         String color;
         switch (signal) {
-            case "STRONG BUY"  -> color = "#2ecc71";
-            case "BUY"         -> color = "#27ae60";
-            case "HOLD"        -> color = "#f39c12";
-            case "SELL"        -> color = "#e74c3c";
+            case "STRONG BUY"  -> color = "#006400";
+            case "BUY"         -> color = "#90EE90";
+            case "HOLD"        -> color = "#FFFF00";
+            case "SELL"        -> color = "#FFA500";
             case "STRONG SELL" -> color = "#c0392b";
-            default            -> color = "#1a1a2e";
+            default            -> color = "#FF0000";
         }
         signalLabel.setText(signal);
         signalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: "
