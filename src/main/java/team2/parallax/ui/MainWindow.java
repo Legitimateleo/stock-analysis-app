@@ -1,12 +1,10 @@
 package team2.parallax.ui;
-import javafx.scene.control.ScrollPane;
+
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.Node;
-import java.util.Set;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -21,12 +19,6 @@ import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
 import team2.parallax.service.ValidationScore;
 
-import javafx.scene.chart.StackedBarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
@@ -34,13 +26,14 @@ import java.util.Properties;
 public class MainWindow extends Application {
 
     private MarketDataService marketData;
-    private Fortune500 currentStock = null; // add this field at top of class
-    // UI components that need to be updated after search
+    private Fortune500 currentStock = null;
+    private StockSnapshot currentSnapshot = null;
+
+    // UI components
     private ImageView logoView;
     private Label companyNameLabel;
     private Label tickerLabel;
     private Label industryLabel;
-    private Label countryLabel;
     private Label currentPriceLabel;
     private Label peRatioLabel;
     private Label priceToBookLabel;
@@ -51,12 +44,11 @@ public class MainWindow extends Application {
     private FlowPane relatedStocksPane;
     private Label errorLabel;
     private TextField searchField;
-    private StackedBarChart<String, Number> recommendationChart;
+    private Pane recommendationChart;
     private Button trendsButton;
     private Button calculateButton;
     private Label finalScoreLabel;
     private Label signalLabel;
-    private StockSnapshot currentSnapshot = null;
 
     @Override
     public void init() throws Exception {
@@ -77,12 +69,12 @@ public class MainWindow extends Application {
         root.setPadding(new Insets(30));
         root.setStyle("-fx-background-color: #f9f9f9;");
 
-        // ── Wrap root in ScrollPane ───────────────────────────────────
+        // ── ScrollPane ────────────────────────────────────────────────
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background-color: #f9f9f9;");
-
         Scene sceneScroll = new Scene(scrollPane, 800, 950);
+
         // ── Title ─────────────────────────────────────────────────────
         Label title = new Label("PARALLAX");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 28));
@@ -107,11 +99,10 @@ public class MainWindow extends Application {
         errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 13px;");
         errorLabel.setVisible(false);
 
-
         HBox searchBar = new HBox(10, searchField, searchButton);
         searchBar.setAlignment(Pos.CENTER_LEFT);
 
-        // ── Results panel (hidden until search) ───────────────────────
+        // ── Results panel ─────────────────────────────────────────────
         resultsPanel = new VBox(15);
         resultsPanel.setVisible(false);
         resultsPanel.setStyle("""
@@ -122,7 +113,7 @@ public class MainWindow extends Application {
                 -fx-background-radius: 8px;
                 """);
 
-        // Logo + company info row
+        // ── Logo + company info ───────────────────────────────────────
         logoView = new ImageView();
         logoView.setFitWidth(60);
         logoView.setFitHeight(60);
@@ -144,16 +135,13 @@ public class MainWindow extends Application {
         HBox tickerIndustryRow = new HBox(6, tickerLabel, tickerIndustrySeparator, industryLabel);
         tickerIndustryRow.setAlignment(Pos.CENTER_LEFT);
 
-        countryLabel = new Label();
-        countryLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
-
-        VBox companyInfo = new VBox(4, companyNameLabel, tickerIndustryRow, countryLabel);
+        VBox companyInfo = new VBox(4, companyNameLabel, tickerIndustryRow);
         companyInfo.setAlignment(Pos.CENTER_LEFT);
 
         HBox companyRow = new HBox(15, logoView, companyInfo);
         companyRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Metrics grid
+        // ── Metrics grid ──────────────────────────────────────────────
         GridPane metricsGrid = new GridPane();
         metricsGrid.setHgap(40);
         metricsGrid.setVgap(12);
@@ -173,14 +161,15 @@ public class MainWindow extends Application {
         metricsGrid.add(metricBox("52W High",      weekHighLabel),      0, 2);
         metricsGrid.add(metricBox("52W Low",       weekLowLabel),       1, 2);
 
+        // ── Calculate button + score labels ───────────────────────────
         calculateButton = new Button("Calculate Valuation");
         calculateButton.setStyle("""
-        -fx-background-color: #1a1a2e;
-        -fx-text-fill: white;
-        -fx-font-size: 14px;
-        -fx-padding: 8px 20px;
-        -fx-cursor: hand;
-        """);
+                -fx-background-color: #1a1a2e;
+                -fx-text-fill: white;
+                -fx-font-size: 14px;
+                -fx-padding: 8px 20px;
+                -fx-cursor: hand;
+                """);
         calculateButton.setVisible(false);
         calculateButton.setOnAction(e -> handleCalculate());
 
@@ -190,22 +179,24 @@ public class MainWindow extends Application {
 
         signalLabel = new Label();
         signalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-        // Separator
-        Separator separator = new Separator();
 
-        //trendsButton
+        // ── Trends button ─────────────────────────────────────────────
         trendsButton = new Button("Show Trends");
         trendsButton.setStyle("""
-        -fx-background-color: #1a1a2e;
-        -fx-text-fill: white;
-        -fx-font-size: 14px;
-        -fx-padding: 8px 20px;
-        -fx-cursor: hand;
-        """);
-        trendsButton.setVisible(false); // hidden until search succeeds
+                -fx-background-color: #1a1a2e;
+                -fx-text-fill: white;
+                -fx-font-size: 14px;
+                -fx-padding: 8px 20px;
+                -fx-cursor: hand;
+                """);
+        trendsButton.setVisible(false);
         trendsButton.setOnAction(e -> handleTrends());
 
-        // Related stocks
+        // ── Recommendation chart placeholder ──────────────────────────
+        recommendationChart = new Pane();
+        recommendationChart.setVisible(false);
+
+        // ── Related stocks ────────────────────────────────────────────
         Label relatedTitle = new Label("Related Stocks");
         relatedTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         relatedTitle.setStyle("-fx-text-fill: #1a1a2e;");
@@ -214,20 +205,7 @@ public class MainWindow extends Application {
         relatedStocksPane.setHgap(8);
         relatedStocksPane.setVgap(8);
 
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Period");
-        yAxis.setLabel("# Analysts");
-
-        recommendationChart = new StackedBarChart<>(xAxis, yAxis);
-        recommendationChart.setTitle(" Recommendation Trends");
-        recommendationChart.setPrefHeight(400);
-        recommendationChart.setAnimated(false);
-        recommendationChart.setVisible(false);
-        recommendationChart.setStyle("""
-        -fx-bar-fill: derive(-fx-accent, 0%);
-        """);
-
+        // ── Assemble results panel ────────────────────────────────────
         resultsPanel.getChildren().addAll(
                 companyRow,
                 new Separator(),
@@ -258,19 +236,22 @@ public class MainWindow extends Application {
         stage.show();
     }
 
-
     private void handleSearch(String input) {
         if (input == null || input.trim().isEmpty()) return;
 
         errorLabel.setVisible(false);
         resultsPanel.setVisible(false);
-
-        // ── Reset chart and scores on new search ──────────────────────
-        recommendationChart.getData().clear();
-        recommendationChart.setVisible(false);
         finalScoreLabel.setText("");
         signalLabel.setText("");
         currentSnapshot = null;
+
+        // ── Reset chart ───────────────────────────────────────────────
+        int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
+        recommendationChart = new Pane();
+        recommendationChart.setVisible(false);
+        if (chartIndex >= 0) {
+            resultsPanel.getChildren().set(chartIndex, recommendationChart);
+        }
 
         Task<StockSnapshot> task = new Task<>() {
             @Override
@@ -294,7 +275,6 @@ public class MainWindow extends Application {
                 trendsButton.setVisible(true);
                 calculateButton.setVisible(true);
             }
-
         });
 
         task.setOnFailed(e -> {
@@ -318,57 +298,12 @@ public class MainWindow extends Application {
         task.setOnSucceeded(e -> {
             List<RecommendationTrends> trends = task.getValue();
             if (trends != null && !trends.isEmpty()) {
-                recommendationChart.getData().clear();
-                recommendationChart.setTitle(currentStock.name() + " Recommendation Trends");
-                recommendationChart.setPrefHeight(400);
-
-                XYChart.Series<String, Number> strongBuySeries  = new XYChart.Series<>();
-                XYChart.Series<String, Number> buySeries        = new XYChart.Series<>();
-                XYChart.Series<String, Number> holdSeries       = new XYChart.Series<>();
-                XYChart.Series<String, Number> sellSeries       = new XYChart.Series<>();
-                XYChart.Series<String, Number> strongSellSeries = new XYChart.Series<>();
-
-                strongBuySeries.setName("Strong Buy");
-                buySeries.setName("Buy");
-                holdSeries.setName("Hold");
-                sellSeries.setName("Sell");
-                strongSellSeries.setName("Strong Sell");
-
-                for (RecommendationTrends trend : trends) {
-                    String period = trend.getPeriod();
-                    strongBuySeries.getData().add(new XYChart.Data<>(period, trend.getStrongBuy()));
-                    buySeries.getData().add(new XYChart.Data<>(period, trend.getBuy()));
-                    holdSeries.getData().add(new XYChart.Data<>(period, trend.getHold()));
-                    sellSeries.getData().add(new XYChart.Data<>(period, trend.getSell()));
-                    strongSellSeries.getData().add(new XYChart.Data<>(period, trend.getStrongSell()));
-                }
-
-                recommendationChart.getData().addAll(
-                        strongBuySeries, buySeries, holdSeries, sellSeries, strongSellSeries
-                );
-
-                // ── Apply colors after nodes are rendered ─────────────────
-                String[] colors = {"#006400", "#90EE90", "#FFFF00", "#FFA500", "#FF0000"};
-                for (int i = 0; i < recommendationChart.getData().size(); i++) {
-                    XYChart.Series<String, Number> series = recommendationChart.getData().get(i);
-                    for (XYChart.Data<String, Number> data : series.getData()) {
-                        if (data.getNode() != null) {
-                            data.getNode().setStyle("-fx-bar-fill: " + colors[i] + ";");
-                        }
-                    }
-                }
-                // ── Apply legend colors via CSS ───────────────────────────
-                String[] cssColors = {"#2ecc71", "#27ae60", "#f39c12", "#e74c3c", "#c0392b"};
-                Set<Node> legendItems = recommendationChart.lookupAll(".chart-legend-item-symbol");
-                int i = 0;
-                for (Node legendItem : legendItems) {
-                    if (i < cssColors.length) {
-                        legendItem.setStyle("-fx-background-color: " + cssColors[i] + ";");
-                        i++;
-                    }
-                }
-
+                int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
+                recommendationChart = RecommendationTrendsChart.build(trends, currentStock.name());
                 recommendationChart.setVisible(true);
+                if (chartIndex >= 0) {
+                    resultsPanel.getChildren().set(chartIndex, recommendationChart);
+                }
             }
         });
 
@@ -382,12 +317,12 @@ public class MainWindow extends Application {
 
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
-        // ── From Fortune500 enum (no API calls) ───────────────────────
+        // ── From Fortune500 enum ──────────────────────────────────────
         companyNameLabel.setText(stock.getCompanyName());
         tickerLabel.setText(stock.name());
         industryLabel.setText(stock.getIndustry());
 
-        // ── From StockSnapshot (API data) ─────────────────────────────
+        // ── From StockSnapshot ────────────────────────────────────────
         try {
             Image logo = new Image(snapshot.getLogo(), true);
             logoView.setImage(logo);
@@ -408,13 +343,13 @@ public class MainWindow extends Application {
             final String relatedName = related.name();
             Label chip = new Label(relatedName);
             chip.setStyle("""
-                -fx-background-color: #e8e8e8;
-                -fx-padding: 4px 10px;
-                -fx-border-radius: 4px;
-                -fx-background-radius: 4px;
-                -fx-font-size: 12px;
-                -fx-cursor: hand;
-                """);
+                    -fx-background-color: #e8e8e8;
+                    -fx-padding: 4px 10px;
+                    -fx-border-radius: 4px;
+                    -fx-background-radius: 4px;
+                    -fx-font-size: 12px;
+                    -fx-cursor: hand;
+                    """);
             chip.setOnMouseClicked(event -> {
                 searchField.setText(relatedName);
                 handleSearch(relatedName);
@@ -422,8 +357,6 @@ public class MainWindow extends Application {
             relatedStocksPane.getChildren().add(chip);
         }
     }
-
-     // add field at top
 
     private void handleCalculate() {
         if (currentStock == null || currentSnapshot == null) {
@@ -437,23 +370,26 @@ public class MainWindow extends Application {
         String signal = valuation.getSignal(currentStock, currentSnapshot);
 
         finalScoreLabel.setText(String.format("Score: %.2f / 10", score));
-        //#2ecc71", "#27ae60", "#f39c12", "#e74c3c", "#c0392b"
+
+        //new Def("Strong Sell", "#7a2020", RecommendationTrends::getStrongSell),
+        //            new Def("Sell",        "#c0392b", RecommendationTrends::getSell),
+        //            new Def("Hold",        "#c9960c", RecommendationTrends::getHold),
+        //            new Def("Buy",         "#27ae60", RecommendationTrends::getBuy),
+        //            new Def("Strong Buy",  "#1a5c1a", RecommendationTrends::getStrongBuy)
         String color;
         switch (signal) {
-            case "STRONG BUY"  -> color = "#006400";
-            case "BUY"         -> color = "#90EE90";
-            case "HOLD"        -> color = "#FFFF00";
-            case "SELL"        -> color = "#FFA500";
-            case "STRONG SELL" -> color = "#c0392b";
-            default            -> color = "#FF0000";
+            case "STRONG BUY"  -> color = "#1a5c1a";
+            case "BUY"         -> color = "#27ae60";
+            case "HOLD"        -> color = "#c9960c";
+            case "SELL"        -> color = "#c0392b";
+            case "STRONG SELL" -> color = "#7a2020";
+            default            -> color = "#1a1a2e";
         }
         signalLabel.setText(signal);
         signalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: "
                 + color + ";");
     }
 
-
-    // Helper to create a labeled metric box
     private VBox metricBox(String labelText, Label valueLabel) {
         Label label = new Label(labelText);
         label.setStyle("-fx-text-fill: #888888; -fx-font-size: 12px;");
