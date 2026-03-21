@@ -1,5 +1,6 @@
 package team2.parallax.service;
-
+import team2.parallax.service.CalculationMethods;
+import team2.parallax.service.ValidationScore;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
@@ -40,26 +41,6 @@ public class MarketDataService {
         return gson.fromJson(raw, JsonArray.class);
     }
 
-    public JsonObject getCandles(String symbol, long from, long to) {
-        return client.get("stock/candle?symbol=" + symbol
-                + "&from=" + from + "&to=" + to);
-    }
-
-    public JsonArray getCompanyNews(String symbol, String from, String to) {
-        String raw = client.getRaw("company-news?symbol=" + symbol
-                + "&from=" + from + "&to=" + to);
-        if (raw == null) return null;
-        return gson.fromJson(raw, JsonArray.class);
-    }
-
-    public JsonObject getInsiderSentiment(String symbol, String from, String to) {
-        return client.get("stock/insider-sentiment?symbol=" + symbol
-                + "&from=" + from + "&to=" + to);
-    }
-
-    public JsonObject getInsiderTransactions(String symbol){
-        return client.get("stock/insider-transactions?symbol=" + symbol);
-    }
 
     public Fortune500 search(String input) {
         String normalized = input.trim().toUpperCase();
@@ -89,7 +70,7 @@ public class MarketDataService {
         return related;
     }
 
-    private List<RecommendationTrends> getTrends(Fortune500 stock) {
+    public List<RecommendationTrends> getTrends(Fortune500 stock) {
         List<RecommendationTrends> trends = new ArrayList<>();
         JsonArray trendsData = getRecommendationTrends(stock.name());
         if(trendsData == null) return trends;
@@ -112,49 +93,55 @@ public class MarketDataService {
     public StockSnapshot getSnapshot(Fortune500 stock) {
         String symbol = stock.name();
 
-        //calling quote data
-        JsonObject quoteData = getQuote(symbol);
-        double currentPrice = quoteData != null ? quoteData.get("c").getAsDouble() : 0;
-
-        //Company Profile Data
-        JsonObject profileData = getCompanyProfile(symbol);
-        String companyName = "N/A", country = "N/A", logo = "N/A", ticker = symbol;
-        if (profileData != null) {
-            if (profileData.has("name") && !profileData.get("name").isJsonNull())
-                companyName = profileData.get("name").getAsString();
-            if (profileData.has("country") && !profileData.get("country").isJsonNull())
-                country = profileData.get("country").getAsString();
-            if (profileData.get("logo") != null && !profileData.get("logo").isJsonNull())
-                logo = profileData.get("logo").getAsString();
-            if (profileData.get("ticker") != null && !profileData.get("ticker").isJsonNull())
-                ticker = profileData.get("ticker").getAsString();
+        // ── 1 call: Quote ─────────────────────────────────────────────
+        JsonObject quoteData = client.get("quote?symbol=" + symbol);
+        double currentPrice = 0, change = 0, changePercent = 0;
+        if (quoteData != null) {
+            currentPrice  = getDoubleOrZero(quoteData, "c");
+            change        = getDoubleOrZero(quoteData, "d");
+            changePercent = getDoubleOrZero(quoteData, "dp");
         }
 
-        //metrics Data
-        JsonObject metricsData = getFinancialMetrics(symbol);
-        double peRatio = 0, priceToBook = 0, dividendYield = 0, weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
+        // ── 2 call: Metrics ───────────────────────────────────────────
+        JsonObject metricsData = client.get("stock/metric?symbol=" + symbol + "&metric=all");
+        double peRatio = 0, priceToBook = 0, dividendYield = 0,
+                weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
         if (metricsData != null) {
             JsonObject m = metricsData.getAsJsonObject("metric");
             if (m != null) {
-                peRatio = getMetricValue(m, "peBasicExclExtraTTM");
-                priceToBook = getMetricValue(m, "pbAnnual");
-                dividendYield = getMetricValue(m, "currentDividendYieldTTM");
-                weekHigh52 = getMetricValue(m, "52WeekHigh");
-                weekLow52 = getMetricValue(m, "52WeekLow");
+                peRatio              = getMetricValue(m, "peBasicExclExtraTTM");
+                priceToBook          = getMetricValue(m, "pbAnnual");
+                dividendYield        = getMetricValue(m, "currentDividendYieldTTM");
+                weekHigh52           = getMetricValue(m, "52WeekHigh");
+                weekLow52            = getMetricValue(m, "52WeekLow");
                 freeCashFlowPerShare = getMetricValue(m, "cashFlowPerShareTTM");
             }
         }
-        List<Fortune500> relatedStocks = getByIndustry(stock);
-        List<RecommendationTrends> trends = getTrends(stock);
-        double sectorAveragePE = getSectorAveragePE(stock);
-        return new StockSnapshot(stock, companyName, currentPrice, ticker,
-                country, logo, peRatio, priceToBook, dividendYield, weekHigh52, weekLow52, relatedStocks, trends, freeCashFlowPerShare, sectorAveragePE);
+
+        // ── 3 call: Logo only ─────────────────────────────────────────
+        JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
+        String logo = "N/A";
+        if (profileData != null && profileData.has("logo")
+                && !profileData.get("logo").isJsonNull()) {
+            logo = profileData.get("logo").getAsString();
+        }
+
+        return new StockSnapshot(currentPrice, change, changePercent,
+                peRatio, priceToBook, dividendYield,
+                weekHigh52, weekLow52, freeCashFlowPerShare, logo);
     }
 
     public StockSnapshot lookup(String input) {
         Fortune500 stock = search(input);
         if (stock == null) return null;
         return getSnapshot(stock);
+    }
+
+    private double getDoubleOrZero(JsonObject obj, String key) {
+        if (obj.has(key) && !obj.get(key).isJsonNull()) {
+            return obj.get(key).getAsDouble();
+        }
+        return 0;
     }
 
     private double getMetricValue(JsonObject metrics, String key) {
@@ -186,6 +173,10 @@ public class MarketDataService {
         //returns total sum of PE in the sector and divides it by the number of companies within that sector
         //also ensures count is greater than 0.
         return count > 0 ? total / count : 0;
+    }
+
+    public ValidationScore getValuation(Fortune500 stock, StockSnapshot snapshot) {
+        return new ValidationScore( new CalculationMethods());
     }
 }
 

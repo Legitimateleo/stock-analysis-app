@@ -1,5 +1,7 @@
 package team2.parallax.service;
 import team2.parallax.model.StockSnapshot;
+import team2.parallax.data.SectorPE;
+import team2.parallax.data.Fortune500;
 
 public class CalculationMethods {
 
@@ -40,9 +42,9 @@ public class CalculationMethods {
         else                            return 2.0;
     }
 
-    public double sectorPEScore(StockSnapshot snapshot){
+    public double sectorPEScore(Fortune500 stock, StockSnapshot snapshot){
         double stockPE = snapshot.getPeRatio();
-        double sectorPE = snapshot.getSectorAveragePE();
+        double sectorPE = SectorPE.getAverageForIndustry(stock.getIndustry());
 
         if (stockPE <= 0 || sectorPE <= 0) return 5.0;
 
@@ -56,4 +58,6 @@ public class CalculationMethods {
         else if (ratio < 1.50)      return 2.0; //overvalued
         else                        return 1.0;
     }
+
+
 }
