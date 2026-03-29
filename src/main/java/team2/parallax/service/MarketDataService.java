@@ -11,11 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.JsonElement;
 
-
 public class MarketDataService {
-    //calls client class to connect the methods here to the endpoints
+    // calls client class to connect the methods here to the endpoints
     private final FinnhubClient client;
-    //method that converts java objects into readable Json packages
+    // method that converts java objects into readable Json packages
     private final Gson gson = new Gson();
 
     public MarketDataService(FinnhubClient client) {
@@ -36,7 +35,8 @@ public class MarketDataService {
 
     public JsonArray getRecommendationTrends(String symbol) {
         String raw = client.getRaw("stock/recommendation?symbol=" + symbol);
-        if (raw == null) return null;
+        if (raw == null)
+            return null;
         return gson.fromJson(raw, JsonArray.class);
     }
 
@@ -45,10 +45,25 @@ public class MarketDataService {
                 + "&from=" + from + "&to=" + to);
     }
 
+    /**
+     * Fetch OHLCV candles with an explicit resolution.
+     *
+     * @param resolution Finnhub resolution string:
+     *                   "1","5","15","30","60","D","W","M"
+     */
+    public JsonObject getCandlesWithResolution(String symbol, String resolution,
+            long from, long to) {
+        return client.get("stock/candle?symbol=" + symbol
+                + "&resolution=" + resolution
+                + "&from=" + from
+                + "&to=" + to);
+    }
+
     public JsonArray getCompanyNews(String symbol, String from, String to) {
         String raw = client.getRaw("company-news?symbol=" + symbol
                 + "&from=" + from + "&to=" + to);
-        if (raw == null) return null;
+        if (raw == null)
+            return null;
         return gson.fromJson(raw, JsonArray.class);
     }
 
@@ -57,7 +72,7 @@ public class MarketDataService {
                 + "&from=" + from + "&to=" + to);
     }
 
-    public JsonObject getInsiderTransactions(String symbol){
+    public JsonObject getInsiderTransactions(String symbol) {
         return client.get("stock/insider-transactions?symbol=" + symbol);
     }
 
@@ -81,8 +96,8 @@ public class MarketDataService {
 
     public List<Fortune500> getByIndustry(Fortune500 stock) {
         List<Fortune500> related = new ArrayList<>();
-        for (Fortune500 s :  Fortune500.values()) {
-            if(s != stock && s.getIndustry().equals(stock.getIndustry())) {
+        for (Fortune500 s : Fortune500.values()) {
+            if (s != stock && s.getIndustry().equals(stock.getIndustry())) {
                 related.add(s);
             }
         }
@@ -92,31 +107,30 @@ public class MarketDataService {
     private List<RecommendationTrends> getTrends(Fortune500 stock) {
         List<RecommendationTrends> trends = new ArrayList<>();
         JsonArray trendsData = getRecommendationTrends(stock.name());
-        if(trendsData == null) return trends;
+        if (trendsData == null)
+            return trends;
 
         for (JsonElement elem : trendsData) {
             JsonObject t = elem.getAsJsonObject();
             trends.add(new RecommendationTrends(
-                    t.has("buy")        ? t.get("buy").getAsInt()        : 0,
-                    t.has("hold")       ? t.get("hold").getAsInt()       : 0,
-                    t.has("period")     ? t.get("period").getAsString()  : "N/A",
-                    t.has("sell")       ? t.get("sell").getAsInt()       : 0,
-                    t.has("strongBuy")  ? t.get("strongBuy").getAsInt()  : 0,
-                    t.has("strongSell") ? t.get("strongSell").getAsInt() : 0
-            ));
+                    t.has("buy") ? t.get("buy").getAsInt() : 0,
+                    t.has("hold") ? t.get("hold").getAsInt() : 0,
+                    t.has("period") ? t.get("period").getAsString() : "N/A",
+                    t.has("sell") ? t.get("sell").getAsInt() : 0,
+                    t.has("strongBuy") ? t.get("strongBuy").getAsInt() : 0,
+                    t.has("strongSell") ? t.get("strongSell").getAsInt() : 0));
         }
         return trends;
     }
 
-
     public StockSnapshot getSnapshot(Fortune500 stock) {
         String symbol = stock.name();
 
-        //calling quote data
+        // calling quote data
         JsonObject quoteData = getQuote(symbol);
         double currentPrice = quoteData != null ? quoteData.get("c").getAsDouble() : 0;
 
-        //Company Profile Data
+        // Company Profile Data
         JsonObject profileData = getCompanyProfile(symbol);
         String companyName = "N/A", country = "N/A", logo = "N/A", ticker = symbol;
         if (profileData != null) {
@@ -130,7 +144,7 @@ public class MarketDataService {
                 ticker = profileData.get("ticker").getAsString();
         }
 
-        //metrics Data
+        // metrics Data
         JsonObject metricsData = getFinancialMetrics(symbol);
         double peRatio = 0, priceToBook = 0, dividendYield = 0, weekHigh52 = 0, weekLow52 = 0;
         if (metricsData != null) {
@@ -151,7 +165,8 @@ public class MarketDataService {
 
     public StockSnapshot lookup(String input) {
         Fortune500 stock = search(input);
-        if (stock == null) return null;
+        if (stock == null)
+            return null;
         return getSnapshot(stock);
     }
 
@@ -162,8 +177,3 @@ public class MarketDataService {
         return 0;
     }
 }
-
-
-
-
-
