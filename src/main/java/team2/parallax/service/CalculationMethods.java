@@ -1,0 +1,63 @@
+package team2.parallax.service;
+import team2.parallax.model.StockSnapshot;
+import team2.parallax.data.SectorPE;
+import team2.parallax.data.Fortune500;
+
+public class CalculationMethods {
+
+    public double forwardPEScore(StockSnapshot snapshot){
+        double pe = snapshot.getPeRatio();
+
+        // P/E of 0 means data unavailable
+        if (pe <= 0) return 5.0;
+
+        if (pe < 10)        return 10.0;
+        else if (pe < 15)   return 8.0;
+        else if (pe < 20)   return 6.0;
+        else if (pe < 25)   return 4.0;
+        else if (pe < 30)   return 3.0;
+        else if (pe < 35)   return 2.0;
+        else                return 1.0;
+    }
+
+    public double highLowScore(StockSnapshot snapshot){
+        double current  = snapshot.getCurrentPrice();
+        double high     = snapshot.getWeekHigh52();
+        double low        = snapshot.getWeekLow52();
+
+        if (high == low) return 5.0;
+
+        //calculate mean
+        double mean = (high + low) / 2.0;
+
+        //how far is current price from mean as a percentage
+        double deviation = (current - mean)/ mean;
+
+        //negative deviation = below mean (potentially undervalued)
+        //positive deviation = above mean (potentially overvalued
+        if ( deviation < -0.30)         return 10.0;
+        else if ( deviation < -0.10)    return 8.0;
+        else if ( deviation <= 0.10)    return 6.0;
+        else if ( deviation <= 0.30)    return 4.0;
+        else                            return 2.0;
+    }
+
+    public double sectorPEScore(Fortune500 stock, StockSnapshot snapshot){
+        double stockPE = snapshot.getPeRatio();
+        double sectorPE = SectorPE.getAverageForIndustry(stock.getIndustry());
+
+        if (stockPE <= 0 || sectorPE <= 0) return 5.0;
+
+        double ratio = stockPE / sectorPE;
+
+        if (ratio < 0.5)            return 10.0; //huge discount vs sector
+        else if (ratio < 0.75)      return 8.0; // undervalued vs sector
+        else if (ratio < 0.90)      return 7.0;
+        else if (ratio < 1.10)      return 5.0;
+        else if (ratio < 1.25)      return 3.0;  //slightly overvalued
+        else if (ratio < 1.50)      return 2.0; //overvalued
+        else                        return 1.0;
+    }
+
+
+}
