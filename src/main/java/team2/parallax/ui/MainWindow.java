@@ -18,6 +18,7 @@ import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
 import team2.parallax.service.ValidationScore;
+import team2.parallax.service.MarketDataProvider;
 
 import java.io.InputStream;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.Properties;
 
 public class MainWindow extends Application {
 
-    private MarketDataService marketData;
+    private MarketDataProvider marketData;
     private Fortune500 currentStock = null;
     private StockSnapshot currentSnapshot = null;
 
