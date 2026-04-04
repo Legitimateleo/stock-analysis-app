@@ -1,4 +1,3 @@
-
 package team2.parallax.service;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.StockSnapshot;
@@ -15,11 +14,9 @@ public class ValidationScore {
         return calculator.forwardPEScore(snapshot);
     }
 
-
     public double getHighLowScore(StockSnapshot snapshot){
         return calculator.highLowScore(snapshot);
     }
-
 
     public double getSectorPEScore(Fortune500 stock, StockSnapshot snapshot){
         return calculator.sectorPEScore(stock, snapshot);
@@ -39,11 +36,6 @@ public class ValidationScore {
     public String getSignal(Fortune500 stock, StockSnapshot snapshot){
         double score = getFinalScore(stock, snapshot);
 
-        if (score >= 7.0)           return "STRONG BUY";
-        else if (score >= 5.1)      return "BUY";
-        else if (score == 5.0)      return "HOLD";
-        else if (score >= 3.0)      return "SELL";
-        else                        return "STRONG SELL";
     }
 
     // ── Full summary ──────────────────────────────────────────────

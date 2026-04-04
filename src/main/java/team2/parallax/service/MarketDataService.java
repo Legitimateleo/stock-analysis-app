@@ -13,7 +13,7 @@ import java.util.List;
 import com.google.gson.JsonElement;
 
 
-public class MarketDataService {
+public class MarketDataService implements MarketDataProvider {
     //calls client class to connect the methods here to the endpoints
     private final FinnhubClient client;
     //method that converts java objects into readable Json packages
