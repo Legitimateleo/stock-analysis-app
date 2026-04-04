@@ -1,7 +1,6 @@
 package team2.parallax.service;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.StockSnapshot;
-import team2.parallax.data.SectorPE;
 public class ValidationScore {
     private final CalculationMethods calculator;
 
@@ -35,6 +34,12 @@ public class ValidationScore {
     //signal
     public String getSignal(Fortune500 stock, StockSnapshot snapshot){
         double score = getFinalScore(stock, snapshot);
+
+        if (score >= 7.0)      return "STRONG BUY";
+        else if (score >= 5.1) return "BUY";
+        else if (score == 5.0) return "HOLD";
+        else if (score >= 3.0) return "SELL";
+        else                   return "STRONG SELL";
 
     }
 
