@@ -1,8 +1,7 @@
 package team2.parallax.ui;
 
-import javafx.scene.control.ScrollPane;
 import javafx.application.Application;
-import javafx.concurrent.Task;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,20 +15,16 @@ import javafx.stage.Stage;
 import team2.parallax.api.FinnhubClient;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
-import team2.parallax.service.MarketDataProvider;
 import team2.parallax.service.MarketDataService;
-import team2.parallax.service.ValidationScore;
 import team2.parallax.data.Fortune500;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-public class MainWindow extends Application {
+public class MainWindow extends Application implements ViewCallBack {
 
-    private MarketDataProvider marketData;
-    private Fortune500 currentStock = null;
-    private StockSnapshot currentSnapshot = null;
+    private ParallaxController controller;
 
     // UI components
     private ImageView logoView;
@@ -61,7 +56,8 @@ public class MainWindow extends Application {
         }
         String apiKey = config.getProperty("FINNHUB_API_KEY");
         FinnhubClient client = new FinnhubClient(apiKey);
-        marketData = new MarketDataService(client);
+        MarketDataService marketData = new MarketDataService(client);
+        controller = new ParallaxController(marketData, this);
     }
 
     @Override
@@ -173,7 +169,7 @@ public class MainWindow extends Application {
                 -fx-cursor: hand;
                 """);
         calculateButton.setVisible(false);
-        calculateButton.setOnAction(e -> handleCalculate());
+        calculateButton.setOnAction(e -> controller.handleCalculate());
 
         finalScoreLabel = new Label();
         finalScoreLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
@@ -192,7 +188,10 @@ public class MainWindow extends Application {
                 -fx-cursor: hand;
                 """);
         trendsButton.setVisible(false);
-        trendsButton.setOnAction(e -> handleTrends());
+        trendsButton.setOnAction(e -> {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+            controller.handleTrends();});
 
         // ── Recommendation chart placeholder ──────────────────────────
         recommendationChart = new Pane();
@@ -225,8 +224,8 @@ public class MainWindow extends Application {
         );
 
         // ── Wire search action ────────────────────────────────────────
-        searchButton.setOnAction(e -> handleSearch(searchField.getText()));
-        searchField.setOnAction(e -> handleSearch(searchField.getText()));
+        searchButton.setOnAction(e -> handleSearch());
+        searchField.setOnAction(e -> handleSearch());
 
         // ── Assemble root ─────────────────────────────────────────────
         root.getChildren().addAll(title, searchBar, errorLabel, resultsPanel);
@@ -238,16 +237,14 @@ public class MainWindow extends Application {
         stage.show();
     }
 
-    private void handleSearch(String input) {
-        if (input == null || input.trim().isEmpty()) return;
-
+    // ── View trigger methods ──────────────────────────────────────────
+    private void handleSearch() {
         errorLabel.setVisible(false);
         resultsPanel.setVisible(false);
         finalScoreLabel.setText("");
         signalLabel.setText("");
-        currentSnapshot = null;
 
-        // ── Reset chart ───────────────────────────────────────────────
+        // reset chart
         int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
         recommendationChart = new Pane();
         recommendationChart.setVisible(false);
@@ -255,68 +252,82 @@ public class MainWindow extends Application {
             resultsPanel.getChildren().set(chartIndex, recommendationChart);
         }
 
-        Task<StockSnapshot> task = new Task<>() {
-            @Override
-            protected StockSnapshot call() {
-                Fortune500 stock = marketData.search(input);
-                if (stock == null) return null;
-                currentStock = stock;
-                return marketData.getSnapshot(stock);
-            }
-        };
-
-        task.setOnSucceeded(e -> {
-            StockSnapshot snapshot = task.getValue();
-            if (snapshot == null) {
-                errorLabel.setText("Stock not found or not in Fortune 500.");
-                errorLabel.setVisible(true);
-            } else {
-                currentSnapshot = snapshot;
-                populateResults(currentStock, snapshot);
-                resultsPanel.setVisible(true);
-                trendsButton.setVisible(true);
-                calculateButton.setVisible(true);
-            }
-        });
-
-        task.setOnFailed(e -> {
-            errorLabel.setText("Something went wrong. Please try again.");
-            errorLabel.setVisible(true);
-        });
-
-        new Thread(task).start();
+        controller.handleSearch(searchField.getText());
     }
 
-    private void handleTrends() {
-        if (currentStock == null) return;
-
-        Task<List<RecommendationTrends>> task = new Task<>() {
-            @Override
-            protected List<RecommendationTrends> call() {
-                return marketData.getTrends(currentStock);
-            }
-        };
-
-        task.setOnSucceeded(e -> {
-            List<RecommendationTrends> trends = task.getValue();
-            if (trends != null && !trends.isEmpty()) {
-                int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
-                recommendationChart = RecommendationTrendsChart.build(trends, currentStock.name());
-                recommendationChart.setVisible(true);
-                if (chartIndex >= 0) {
-                    resultsPanel.getChildren().set(chartIndex, recommendationChart);
-                }
-            }
+    // ── ViewCallback implementations ──────────────────────────────────
+    @Override
+    public void onSearchSuccess(Fortune500 stock, StockSnapshot snapshot) {
+        Platform.runLater(() -> {
+            populateResults(stock, snapshot);
+            resultsPanel.setVisible(true);
+            trendsButton.setVisible(true);
+            calculateButton.setVisible(true);
+            errorLabel.setVisible(false);
         });
-
-        task.setOnFailed(e -> {
-            errorLabel.setText("Failed to load trends.");
-            errorLabel.setVisible(true);
-        });
-
-        new Thread(task).start();
     }
 
+    @Override
+    public void onSearchFailure(String message) {
+        Platform.runLater(() -> {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+        });
+    }
+
+    @Override
+    public void onTrendsLoaded(List<RecommendationTrends> trends) {
+        Platform.runLater(() -> {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+
+            int chartIndex = resultsPanel.getChildren().indexOf(recommendationChart);
+            recommendationChart = RecommendationTrendsChart.build(
+                    trends, controller.getCurrentStock().name());
+            recommendationChart.setVisible(true);
+
+            if (chartIndex >= 0) {
+                resultsPanel.getChildren().set(chartIndex, recommendationChart);
+            }
+        });
+    }
+
+    @Override
+    public void onTrendsLoadFailure(String message) {
+        Platform.runLater(() -> {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+        });
+    }
+
+    @Override
+    public void onScoreCalculated(double score, String signal) {
+        Platform.runLater(() -> {
+            finalScoreLabel.setText(String.format("Score: %.2f / 10", score));
+            String color;
+            switch (signal) {
+                case "STRONG BUY"  -> color = "#1a5c1a";
+                case "BUY"         -> color = "#27ae60";
+                case "HOLD"        -> color = "#c9960c";
+                case "SELL"        -> color = "#c0392b";
+                case "STRONG SELL" -> color = "#7a2020";
+                default            -> color = "#1a1a2e";
+            }
+            signalLabel.setText(signal);
+            signalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: "
+                    + color + ";");
+        });
+    }
+
+    @Override
+    public void onScoreCalculatedFailure(String message) {
+        Platform.runLater(() -> {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+        });
+    }
+
+    // ── Private view helpers ──────────────────────────────────────────
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
         // ── From Fortune500 enum ──────────────────────────────────────
@@ -339,9 +350,9 @@ public class MainWindow extends Application {
         weekHighLabel.setText("$" + String.format("%.2f", snapshot.getWeekHigh52()));
         weekLowLabel.setText("$" + String.format("%.2f", snapshot.getWeekLow52()));
 
-        // ── Related stocks from enum ───────────────────────────────────
+        // ── Related stocks from enum ──────────────────────────────────
         relatedStocksPane.getChildren().clear();
-        for (Fortune500 related : marketData.getByIndustry(stock)) {
+        for (Fortune500 related : controller.getMarketData().getByIndustry(stock)) {
             final String relatedName = related.name();
             Label chip = new Label(relatedName);
             chip.setStyle("""
@@ -354,37 +365,10 @@ public class MainWindow extends Application {
                     """);
             chip.setOnMouseClicked(event -> {
                 searchField.setText(relatedName);
-                handleSearch(relatedName);
+                handleSearch();
             });
             relatedStocksPane.getChildren().add(chip);
         }
-    }
-
-    private void handleCalculate() {
-        if (currentStock == null || currentSnapshot == null) {
-            errorLabel.setText("Please search for a stock first.");
-            errorLabel.setVisible(true);
-            return;
-        }
-
-        ValidationScore valuation = marketData.getValuation(currentStock, currentSnapshot);
-        double score  = valuation.getFinalScore(currentStock, currentSnapshot);
-        String signal = valuation.getSignal(currentStock, currentSnapshot);
-
-        finalScoreLabel.setText(String.format("Score: %.2f / 10", score));
-
-        String color;
-        switch (signal) {
-            case "STRONG BUY"  -> color = "#1a5c1a";
-            case "BUY"         -> color = "#27ae60";
-            case "HOLD"        -> color = "#c9960c";
-            case "SELL"        -> color = "#c0392b";
-            case "STRONG SELL" -> color = "#7a2020";
-            default            -> color = "#1a1a2e";
-        }
-        signalLabel.setText(signal);
-        signalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: "
-                + color + ";");
     }
 
     private VBox metricBox(String labelText, Label valueLabel) {
