@@ -8,7 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class FinnhubClient {
+public class FinnhubClient implements DataAccessClient{
 
     //string that is the foundation url in which we add more things to get specific data
     private static final String BASE_URL = "https://finnhub.io/api/v1/";

@@ -1,10 +1,8 @@
 package team2.parallax.service;
-import team2.parallax.service.CalculationMethods;
-import team2.parallax.service.ValidationScore;
+import team2.parallax.api.DataAccessClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
-import team2.parallax.api.FinnhubClient;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.StockSnapshot;
@@ -15,20 +13,12 @@ import com.google.gson.JsonElement;
 
 public class MarketDataService implements MarketDataProvider {
     //calls client class to connect the methods here to the endpoints
-    private final FinnhubClient client;
+    private final DataAccessClient client;
     //method that converts java objects into readable Json packages
     private final Gson gson = new Gson();
 
-    public MarketDataService(FinnhubClient client) {
+    public MarketDataService(DataAccessClient client) {
         this.client = client;
-    }
-
-    public JsonObject getQuote(String symbol) {
-        return client.get("quote?symbol=" + symbol);
-    }
-
-    public JsonObject getCompanyProfile(String symbol) {
-        return client.get("stock/profile2?symbol=" + symbol);
     }
 
     public JsonObject getFinancialMetrics(String symbol) {
