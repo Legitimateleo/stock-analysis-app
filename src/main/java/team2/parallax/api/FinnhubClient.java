@@ -12,8 +12,8 @@ public class FinnhubClient implements DataAccessClient{
 
     //string that is the foundation url in which we add more things to get specific data
     private static final String BASE_URL = "https://finnhub.io/api/v1/";
-    //delay of requests to abide by free tier plan
-    private static final long MIN_DELAY_MS = 1000;
+    //delay of requests to abide by free tier plan (30 req / sec burst limit)
+    private static final long MIN_DELAY_MS = 35;
 
     //sting to mask API key
     private final String apiKey;

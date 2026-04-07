@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+//Version 4/7 -Patrick, Main landing page UI change
+
 public class FinnhubMain {
     public static void main(String[] args) throws IOException {
 

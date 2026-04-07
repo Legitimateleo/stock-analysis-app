@@ -47,7 +47,7 @@ public class RecommendationTrendsChart {
         yAxis.setLabel("# Analysts");
         yAxis.setMinorTickVisible(false);
         yAxis.setTickLabelFont(Font.font("Arial", 12));
-        yAxis.setStyle("-fx-font-family: Arial; -fx-font-size: 12px; -fx-text-fill: #888888;");
+        yAxis.setStyle("-fx-font-family: Arial; -fx-font-size: 12px; -fx-text-fill: #aaaaaa;");
 
         StackedBarChart<String, Number> chart = new StackedBarChart<>(xAxis, yAxis);
         chart.setTitle(ticker + " Recommendation Trends");
@@ -90,9 +90,11 @@ public class RecommendationTrendsChart {
         Platform.runLater(() -> Platform.runLater(() -> {
             refreshLabels(wrapper, entries);
             refreshLegend(chart, entries);
-            yAxis.lookup(".axis-label").setStyle(
-                "-fx-font-family: Arial; -fx-font-size: 12px; -fx-text-fill: #888888;"
-            );
+            var titleNode = chart.lookup(".chart-title");
+            if (titleNode != null) titleNode.setStyle("-fx-text-fill: white;");
+            var yLabel = yAxis.lookup(".axis-label");
+            if (yLabel != null) yLabel.setStyle("-fx-font-family: Arial; -fx-font-size: 12px; -fx-text-fill: #aaaaaa;");
+            chart.lookupAll(".axis").forEach(n -> n.setStyle("-fx-tick-label-fill: #aaaaaa;"));
         }));
 
         return wrapper;
@@ -122,6 +124,7 @@ public class RecommendationTrendsChart {
         // Style each symbol by its label name
         for (var item : items) {
             if (!(item instanceof javafx.scene.control.Label lbl)) continue;
+            lbl.setStyle("-fx-text-fill: white;");
             String color = colorMap.get(lbl.getText());
             if (color == null) continue;
             var sym = lbl.lookup(".chart-legend-item-symbol");
