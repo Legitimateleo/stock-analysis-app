@@ -71,7 +71,7 @@ public class MainWindow extends Application implements ViewCallBack {
         // ── ScrollPane ────────────────────────────────────────────────
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToHeight(false);
         scrollPane.setStyle("-fx-background: #1a1d24; -fx-background-color: #1a1d24;");
         Scene sceneScroll = new Scene(scrollPane, 800, 950);
 
@@ -238,7 +238,7 @@ public class MainWindow extends Application implements ViewCallBack {
 
         // ── Assemble root ─────────────────────────────────────────────
         Region topSpacer = new Region();
-        topSpacer.prefHeightProperty().bind(root.heightProperty().multiply(0.15));
+        topSpacer.prefHeightProperty().bind(scrollPane.heightProperty().multiply(0.15));
 
         Region bottomSpacer = new Region();
         VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
