@@ -438,7 +438,15 @@ public enum Fortune500 {
     CNM("Core & Main Inc", "Trading Companies & Distributors"),
     HWM("Howmet Aerospace Inc", "Aerospace & Defense"),
     INGR("Ingredion Inc", "Food Products"),
-    VMC("Vulcan Materials Co", "Construction");
+    VMC("Vulcan Materials Co", "Construction"),
+    SNDK("Sandisk Corp", "Semicondutors"),
+    USO("United States Oil", "Energy"),
+    SPY("S&P500 Index", "Index"),
+    QQQ("Nasdaq 100 Index", "Index"),
+    STX("Seagate Technology", "Semiconductors"),
+    NBIS("Nebius Group NV", "Technology"),
+    SOXL("Semiconductor 3x Leverage", "Index"),
+    TQQQ("Nasdaq 100 3x Leverage", "Index");
 
     private final String companyName;
     private final String industry;
@@ -448,6 +456,11 @@ public enum Fortune500 {
         this.industry = industry;
     }
 
-    public String getCompanyName() { return companyName; }
-    public String getIndustry()    { return industry; }
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public String getIndustry() {
+        return industry;
+    }
 }
