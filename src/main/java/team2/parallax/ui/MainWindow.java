@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import team2.parallax.api.FinnhubClient;
+import team2.parallax.api.PolygonClient;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
@@ -47,6 +48,9 @@ public class MainWindow extends Application implements ViewCallBack {
     private Label finalScoreLabel;
     private Label signalLabel;
 
+    private PolygonClient polygonClient;
+    private StockChartPanel stockChartPanel;
+
     @Override
     public void init() throws Exception {
         Properties config = new Properties();
@@ -55,6 +59,8 @@ public class MainWindow extends Application implements ViewCallBack {
             config.load(input);
         }
         String apiKey = config.getProperty("FINNHUB_API_KEY");
+        String polygonKey = config.getProperty("POLYGON_API_KEY", "").trim();
+        polygonClient = new PolygonClient(polygonKey);
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
         controller = new ParallaxController(marketData, this);
@@ -208,6 +214,9 @@ public class MainWindow extends Application implements ViewCallBack {
         recommendationChart = new Pane();
         recommendationChart.setVisible(false);
 
+        // ── Stock Chart Panel ─────────────────────────────────────────
+        stockChartPanel = new StockChartPanel(polygonClient);
+
         // ── Related stocks ────────────────────────────────────────────
         Label relatedTitle = new Label("Related Stocks");
         relatedTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
@@ -220,6 +229,8 @@ public class MainWindow extends Application implements ViewCallBack {
         // ── Assemble results panel ────────────────────────────────────
         resultsPanel.getChildren().addAll(
                 companyRow,
+                new Separator(),
+                stockChartPanel,
                 new Separator(),
                 metricsGrid,
                 new Separator(),
@@ -359,6 +370,8 @@ public class MainWindow extends Application implements ViewCallBack {
         companyNameLabel.setText(stock.getCompanyName());
         tickerLabel.setText(stock.name());
         industryLabel.setText(stock.getIndustry());
+
+        stockChartPanel.load(stock.name());
 
         // ── From StockSnapshot ────────────────────────────────────────
         try {
