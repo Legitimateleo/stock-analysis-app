@@ -1,5 +1,6 @@
 package team2.parallax.ui;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.RecommendationTrends;
@@ -76,11 +77,11 @@ public class ParallaxController {
             if (trends != null) {
                 view.onTrendsLoaded(trends);
             }else {
-                view.onSearchFailure("No trends data available");
+                view.onTrendsLoadFailure("No trends data available");
             }
         });
 
-        task.setOnFailed(e -> view.onTrendsLoadFailure("Failed to lead Trends."));
+        task.setOnFailed(e -> view.onTrendsLoadFailure("Failed to load Trends."));
         new Thread(task).start();
 
     }
@@ -98,6 +99,11 @@ public class ParallaxController {
         view.onScoreCalculated(score, signal);
 
 
+    }
+
+    public void handleChartLoad(String ticker) {
+        // MainWindow calls this, StockChartPanel handles its own threading
+        Platform.runLater(() -> view.onChartLoad(ticker));
     }
 
 }

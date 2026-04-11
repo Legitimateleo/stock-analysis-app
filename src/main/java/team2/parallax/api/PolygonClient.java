@@ -18,7 +18,7 @@ import java.net.http.HttpResponse;
  * end-of-day granularity for most endpoints, but the aggregates
  * endpoint works well for 1D–1Y chart ranges on the free plan.
  */
-public class PolygonClient {
+public class PolygonClient implements ChartDataClient {
 
     private static final String BASE_URL = "https://api.polygon.io";
     /**

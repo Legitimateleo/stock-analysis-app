@@ -13,11 +13,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import team2.parallax.api.FinnhubClient;
-import team2.parallax.api.PolygonClient;
+import team2.parallax.api.ChartDataClient;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
+import team2.parallax.api.PolygonClient;
 
 import java.io.InputStream;
 import java.util.List;
@@ -48,7 +49,7 @@ public class MainWindow extends Application implements ViewCallBack {
     private Label finalScoreLabel;
     private Label signalLabel;
 
-    private PolygonClient polygonClient;
+    private ChartDataClient polygonClient;
     private StockChartPanel stockChartPanel;
 
     @Override
@@ -61,6 +62,7 @@ public class MainWindow extends Application implements ViewCallBack {
         String apiKey = config.getProperty("FINNHUB_API_KEY");
         String polygonKey = config.getProperty("POLYGON_API_KEY", "").trim();
         polygonClient = new PolygonClient(polygonKey);
+        stockChartPanel = new StockChartPanel(polygonClient);
         FinnhubClient client = new FinnhubClient(apiKey);
         MarketDataService marketData = new MarketDataService(client);
         controller = new ParallaxController(marketData, this);
@@ -296,6 +298,7 @@ public class MainWindow extends Application implements ViewCallBack {
     public void onSearchSuccess(Fortune500 stock, StockSnapshot snapshot) {
         Platform.runLater(() -> {
             populateResults(stock, snapshot);
+            controller.handleChartLoad(stock.name()); // ← through controller
             resultsPanel.setVisible(true);
             trendsButton.setVisible(true);
             calculateButton.setVisible(true);
@@ -363,6 +366,10 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    @Override
+    public void onChartLoad(String ticker) {
+        stockChartPanel.load(ticker);
+    }
     // ── Private view helpers ──────────────────────────────────────────
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
@@ -371,7 +378,6 @@ public class MainWindow extends Application implements ViewCallBack {
         tickerLabel.setText(stock.name());
         industryLabel.setText(stock.getIndustry());
 
-        stockChartPanel.load(stock.name());
 
         // ── From StockSnapshot ────────────────────────────────────────
         try {

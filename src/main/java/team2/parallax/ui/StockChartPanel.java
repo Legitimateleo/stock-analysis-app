@@ -14,7 +14,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import team2.parallax.api.PolygonClient;
+import team2.parallax.api.ChartDataClient;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -44,7 +44,7 @@ public class StockChartPanel extends VBox {
     private static final Color TIP_BG = Color.web("#1e2535f0"); // tooltip background
 
     // ── State ─────────────────────────────────────────────────────────────────
-    private final PolygonClient polygon;
+    private final ChartDataClient polygon;
 
     private String currentTicker = null;
     private String activeTimeframe = "1M";
@@ -80,7 +80,7 @@ public class StockChartPanel extends VBox {
     private final Label statusLbl;
 
     // ─────────────────────────────────────────────────────────────────────────
-    public StockChartPanel(PolygonClient polygon) {
+    public StockChartPanel(ChartDataClient polygon) {
         this.polygon = polygon;
 
         setSpacing(0);

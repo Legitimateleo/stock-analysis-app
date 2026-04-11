@@ -19,4 +19,5 @@ public interface ViewCallBack {
     //Valuation
     void onScoreCalculated(double score, String signal);
     void onScoreCalculatedFailure(String message);
+    void onChartLoad(String ticker);
 }
