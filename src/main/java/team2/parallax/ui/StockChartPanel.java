@@ -442,8 +442,7 @@ public class StockChartPanel extends VBox {
             timestamps.add(fetchedTs.get(i));
         }
 
-        System.out.printf("Polygon %s %s: Plotting %d bars (Total fetched: %d)%n", currentTicker, tf, prices.size(),
-                fetchedPrices.size());
+
 
         // ── Cache the result ──────────────────────────────────────────────────
         cacheClose.put(cacheKey, prices.stream().mapToDouble(Double::doubleValue).toArray());
