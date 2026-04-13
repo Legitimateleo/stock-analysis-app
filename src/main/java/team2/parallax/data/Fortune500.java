@@ -439,14 +439,22 @@ public enum Fortune500 {
     HWM("Howmet Aerospace Inc", "Aerospace & Defense"),
     INGR("Ingredion Inc", "Food Products"),
     VMC("Vulcan Materials Co", "Construction"),
-    SNDK("Sandisk Corp", "Semicondutors"),
+    SNDK("Sandisk Corp", "Technology"),
+    LITE("Lumentum Holdings Inc", "Technology"),
+    COHR("Coherent Corp", "Technology"),
     USO("United States Oil", "Energy"),
     SPY("S&P500 Index", "Index"),
     QQQ("Nasdaq 100 Index", "Index"),
-    STX("Seagate Technology", "Semiconductors"),
+    STX("Seagate Technology", "Technology"),
     NBIS("Nebius Group NV", "Technology"),
-    SOXL("Semiconductor 3x Leverage", "Index"),
-    TQQQ("Nasdaq 100 3x Leverage", "Index");
+    SOXL("Direxion Daily Semiconductor Bull 3X Shares", "Leveraged ETF"),
+    KORU("Direxion Daily MSCI South Korea Bull 3X Shares", "Leveraged ETF"),
+    TQQQ("ProShares UltraPro QQQ", "Leveraged ETF"),
+    MUU("Direxion Daily MU Bull 2X Shares", "Leveraged ETF"),
+    SNXX("Tradr 2X Long SNDK Daily ETF", "Leveraged ETF"),
+    LITX("Tradr 2X Long LITE Daily ETF", "Leveraged ETF"),
+    COHX("Tradr 2X Long COHR Daily ETF", "Leveraged ETF"),
+    WDCX("Tradr 2X Long WDC Daily ETF", "Leveraged ETF");
 
     private final String companyName;
     private final String industry;
