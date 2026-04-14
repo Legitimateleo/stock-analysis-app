@@ -20,9 +20,10 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+// Interactive candlestick/line chart panel that displays stock price data from Polygon API
 public class StockChartPanel extends VBox {
 
-    // ── Canvas geometry ───────────────────────────────────────────────────────
+    // chart plot stock
     private static final double CW = 740;
     private static final double CH = 250;
     private static final double PL = 70; // left – Y-axis labels
@@ -34,7 +35,7 @@ public class StockChartPanel extends VBox {
 
     private static final ZoneId ET = ZoneId.of("America/New_York");
 
-    // ── Colours ───────────────────────────────────────────────────────────────
+    // Colors
     private static final Color BG = Color.web("#181c27");
     private static final Color GRID = Color.web("#2c3347");
     private static final Color AXIS_TXT = Color.web("#7e8fa8");
@@ -43,7 +44,7 @@ public class StockChartPanel extends VBox {
     private static final Color XHAIR = Color.web("#6b7a9580"); // semi-transparent crosshair
     private static final Color TIP_BG = Color.web("#1e2535f0"); // tooltip background
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // state polygon
     private final ChartDataClient polygon;
 
     private String currentTicker = null;
@@ -74,12 +75,14 @@ public class StockChartPanel extends VBox {
 
     private TimeframeChangeListener listener;
 
-    // ── UI ────────────────────────────────────────────────────────────────────
+    // UI
     private final HBox tabBar;
     private final Canvas canvas;
     private final Label statusLbl;
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Construct the chart panel with tab bar, canvas, mouse listeners, and status
+    // label
     public StockChartPanel(ChartDataClient polygon) {
         this.polygon = polygon;
 
@@ -119,8 +122,8 @@ public class StockChartPanel extends VBox {
         getChildren().addAll(tabBar, canvas, statusLbl);
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    // Polygon api 2
+    // Clear cache if ticker changed and fetch data for the active timeframe
     public void load(String ticker) {
         if (!ticker.equals(currentTicker)) {
             cacheClose.clear();
@@ -131,18 +134,20 @@ public class StockChartPanel extends VBox {
         fetchOrLoad(activeTimeframe);
     }
 
+    // Set the callback listener that fires when new chart data loads
     public void setTimeframeChangeListener(TimeframeChangeListener listener) {
         this.listener = listener;
     }
 
+    // Notify the listener with the first and last price of the visible range
     private void notifyListener() {
         if (listener != null && !prices.isEmpty()) {
             listener.onDataLoaded(activeTimeframe, prices.get(0), prices.get(prices.size() - 1));
         }
     }
 
-    // ── Tab bar ───────────────────────────────────────────────────────────────
-
+    // time frame bar
+    // Build the timeframe tab bar (1D, 5D, 1M, 3M, 6M, 1Y, 2Y)
     private HBox buildTabBar() {
         HBox bar = new HBox(35); // Increased spacing to move SMA section to the right
         bar.setPadding(new Insets(8, 8, 8, 8));
@@ -162,6 +167,7 @@ public class StockChartPanel extends VBox {
         return bar;
     }
 
+    // Create a single clickable timeframe tab label with active/inactive styling
     private Label makeTabLabel(String tf) {
         Label lbl = new Label(tf);
         lbl.setPadding(new Insets(6, 14, 6, 14));
@@ -179,6 +185,7 @@ public class StockChartPanel extends VBox {
         return lbl;
     }
 
+    // Apply active or inactive CSS to a tab label
     private void styleTab(Label lbl, boolean active) {
         if (active) {
             lbl.setStyle(
@@ -194,10 +201,12 @@ public class StockChartPanel extends VBox {
         }
     }
 
+    // Refresh all tab styles to highlight the currently active timeframe
     private void refreshTabStyles() {
         refreshNode(tabBar);
     }
 
+    // Recursively walk the tab bar to re-style each tab label
     private void refreshNode(javafx.scene.Node node) {
         if (node instanceof Label lbl && lbl.getId() != null && lbl.getId().startsWith("chart-tab-")) {
             styleTab(lbl, lbl.getText().equals(activeTimeframe));
@@ -208,12 +217,7 @@ public class StockChartPanel extends VBox {
         }
     }
 
-    // ── Trading-day helpers ───────────────────────────────────────────────────
-
-    /**
-     * Returns the most recent US trading weekday (Mon–Fri) in Eastern Time.
-     * Skips Saturday and Sunday; does not account for US public holidays.
-     */
+    // last trading day algo weekend or week
     private LocalDate lastTradingDay() {
         LocalDate d = LocalDate.now(ET);
         while (d.getDayOfWeek() == DayOfWeek.SATURDAY
@@ -239,8 +243,8 @@ public class StockChartPanel extends VBox {
         return d;
     }
 
-    // ── Data fetch / cache ────────────────────────────────────────────────────
-
+    // data fetch
+    // Fetch chart data from Polygon or load from cache, then render
     private void fetchOrLoad(String tf) {
         String key = currentTicker + "-" + tf;
 
@@ -264,7 +268,7 @@ public class StockChartPanel extends VBox {
         paintEmpty("Loading " + tf + " data…");
         setStatus("Fetching " + currentTicker + " " + tf + "…");
 
-        // ── Polygon aggregates parameters ─────────────────────────────────────
+        // Polygon parameters
         // from / to are "YYYY-MM-DD" date strings (Polygon uses inclusive date ranges).
         // lastTradingDay() resolves to the most recent Mon–Fri from today.
         LocalDate lastTD = lastTradingDay(); // e.g. 2026-03-27 (Friday)
@@ -275,9 +279,9 @@ public class StockChartPanel extends VBox {
         final String span;
         final int limit;
 
+        // CHANGE DATA HERE FOR LESS API CALLS
         // minute changes 10m 20m, less calls = faster
-        // Changed multi to 5+ or 15+ for less rate limit of polygon, less bars =
-        // better.
+        // 15+ for less rate limit of polygon, less bars =
         switch (tf) {
             case "1D" -> {
                 // To get 200 prior 5-min bars, fetch ~4 days instead of 1
@@ -355,8 +359,7 @@ public class StockChartPanel extends VBox {
         new Thread(task, "polygon-chart").start();
     }
 
-    // ── Data parsing ──────────────────────────────────────────────────────────
-
+    // Polygon API JSON response, filter to visible bars, cache results
     private void parseAndStore(JsonObject json, String tf, String cacheKey) {
         prices.clear();
         timestamps.clear();
@@ -447,7 +450,7 @@ public class StockChartPanel extends VBox {
         System.out.printf("Polygon %s %s: Plotting %d bars (Total fetched: %d)%n", currentTicker, tf, prices.size(),
                 fetchedPrices.size());
 
-        // ── Cache the result ──────────────────────────────────────────────────
+        // Cache the result
         cacheClose.put(cacheKey, prices.stream().mapToDouble(Double::doubleValue).toArray());
         cacheTs.put(cacheKey, timestamps.stream().mapToLong(Long::longValue).toArray());
         cacheFullClose.put(cacheKey, fetchedPrices.stream().mapToDouble(Double::doubleValue).toArray());
@@ -457,8 +460,7 @@ public class StockChartPanel extends VBox {
         notifyListener();
     }
 
-    // ── Layout computation ────────────────────────────────────────────────────
-
+    // X/Y coordinates for each data point based on price bounds
     private void computeLayout() {
         int n = prices.size();
         if (n == 0)
@@ -485,8 +487,7 @@ public class StockChartPanel extends VBox {
         }
     }
 
-    // ── Canvas rendering ──────────────────────────────────────────────────────
-
+    // Render the full chart: gradient fill, price line, axes, and hover/end dot
     private void repaint() {
         if (prices.isEmpty()) {
             paintEmpty("");
@@ -538,8 +539,8 @@ public class StockChartPanel extends VBox {
             paintEndDot(gc, n - 1);
     }
 
-    // ── Y-axis ────────────────────────────────────────────────────────────────
-
+    // Y-axis
+    // Draw horizontal grid lines and Y-axis price labels
     private void paintYAxis(GraphicsContext gc) {
         if (axisHi <= axisLo)
             return;
@@ -564,8 +565,8 @@ public class StockChartPanel extends VBox {
         }
     }
 
-    // ── X-axis ────────────────────────────────────────────────────────────────
-
+    // X-axis
+    // Draw X-axis date/time labels with tick marks
     private void paintXAxis(GraphicsContext gc) {
         if (timestamps.isEmpty())
             return;
@@ -594,6 +595,7 @@ public class StockChartPanel extends VBox {
         }
     }
 
+    // Determine which data indices should get X-axis labels based on the timeframe
     private List<Integer> xLabelIndices() {
         List<Integer> raw = new ArrayList<>();
         int n = timestamps.size();
@@ -698,6 +700,7 @@ public class StockChartPanel extends VBox {
         return filtered;
     }
 
+    // Format the X-axis label text based on the current timeframe
     private String formatXLabel(long epochMs) {
         ZonedDateTime z = toZDT(epochMs);
         return switch (activeTimeframe) {
@@ -709,8 +712,8 @@ public class StockChartPanel extends VBox {
         };
     }
 
-    // ── Hover overlay ─────────────────────────────────────────────────────────
-
+    // Hover hover
+    // Draw crosshair, dot, and tooltip bubble at the hovered data point
     private void paintHover(GraphicsContext gc, int idx) {
         double x = px[idx];
         double y = py[idx];
@@ -756,6 +759,7 @@ public class StockChartPanel extends VBox {
         gc.fillText(dateLine, bx + 8, by + 34);
     }
 
+    // Format the tooltip date string based on the current timeframe
     private String formatTooltipDate(long epochMs) {
         ZonedDateTime z = toZDT(epochMs);
         return switch (activeTimeframe) {
@@ -765,6 +769,7 @@ public class StockChartPanel extends VBox {
         };
     }
 
+    // Draw a small dot at the last data point when not hovering
     private void paintEndDot(GraphicsContext gc, int idx) {
         double x = px[idx], y = py[idx];
         gc.setFill(Color.WHITE.deriveColor(0, 1, 1, 0.9));
@@ -773,8 +778,8 @@ public class StockChartPanel extends VBox {
         gc.fillOval(x - 3, y - 3, 6, 6);
     }
 
-    // ── Empty / loading / error state ─────────────────────────────────────────
-
+    // Loading Loading
+    // Render an empty chart state with optional message (loading, error, etc.)
     private void paintEmpty(String msg) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(BG);
@@ -796,8 +801,8 @@ public class StockChartPanel extends VBox {
         }
     }
 
-    // ── Utility helpers ───────────────────────────────────────────────────────
-
+    // find data data
+    // Find the data point index closest to the mouse X position
     private int nearestIndex(double mouseX) {
         if (px == null || px.length == 0)
             return -1;
@@ -813,20 +818,18 @@ public class StockChartPanel extends VBox {
         return best;
     }
 
+    // Convert epoch milliseconds to Eastern Time ZonedDateTime
     private ZonedDateTime toZDT(long epochMs) {
         return Instant.ofEpochMilli(epochMs).atZone(ET);
     }
 
+    // Update the status label below the chart
     private void setStatus(String msg) {
         statusLbl.setText(msg);
         statusLbl.setVisible(!msg.isEmpty());
     }
 
-    /**
-     * "Nice number" Y-axis tick algorithm — rounds the tick interval to a
-     * human-readable power-of-10 multiple (0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2,
-     * 5, …).
-     */
+    // Y axis
     private double[] niceYTicks(double lo, double hi, int desiredCount) {
         double range = hi - lo;
         if (range <= 0)
@@ -851,6 +854,7 @@ public class StockChartPanel extends VBox {
         return ticks.stream().mapToDouble(Double::doubleValue).toArray();
     }
 
+    // Format a price value with appropriate decimal places based on magnitude
     private String formatPrice(double p) {
         if (p >= 1000)
             return String.format("$%.0f", p);

@@ -57,6 +57,7 @@ public class MainWindow extends Application implements ViewCallBack {
     private ChartDataClient polygonClient;
     private StockChartPanel stockChartPanel;
 
+    // API clients and controllers needed for the application.
     @Override
     public void init() throws Exception {
         Properties config = new Properties();
@@ -73,9 +74,9 @@ public class MainWindow extends Application implements ViewCallBack {
         controller = new ParallaxController(marketData, this);
     }
 
+    // Sets up the main user interface layout and components.
     @Override
     public void start(Stage stage) {
-        // ── Root layout ───────────────────────────────────────────────
         VBox root = new VBox(20);
         root.setPadding(new Insets(30));
         root.setStyle("-fx-background-color: #1a1d24;");
@@ -88,11 +89,9 @@ public class MainWindow extends Application implements ViewCallBack {
         scrollPane.setStyle("-fx-background: #1a1d24; -fx-background-color: #1a1d24;");
         Scene sceneScroll = new Scene(scrollPane, 1000, 900);
 
-        // ── Title ─────────────────────────────────────────────────────
         Label title = new Label("Parallax");
         title.setFont(Font.font("SansSerif", FontWeight.BOLD, 64));
         title.setStyle("-fx-text-fill: white;");
-        // ── Search bar ────────────────────────────────────────────────
         searchField = new TextField();
         searchField.setPromptText("Search by ticker or company name.     Example: NVDA…");
         searchField.setStyle("-fx-font-size: 14px; -fx-background-color: transparent; -fx-text-fill: white;");
@@ -123,7 +122,6 @@ public class MainWindow extends Application implements ViewCallBack {
         searchBar.setStyle(
                 "-fx-padding: 4px 6px 4px 16px; -fx-background-color: #383d4a; -fx-background-radius: 30px; -fx-border-radius: 30px;");
 
-        // ── Results panel ─────────────────────────────────────────────
         resultsPanel = new VBox(15);
         resultsPanel.setVisible(false);
         resultsPanel.managedProperty().bind(resultsPanel.visibleProperty());
@@ -135,7 +133,6 @@ public class MainWindow extends Application implements ViewCallBack {
                 -fx-background-radius: 8px;
                 """);
 
-        // ── Logo + company info ───────────────────────────────────────
         logoView = new ImageView();
         logoView.setFitWidth(60);
         logoView.setFitHeight(60);
@@ -176,7 +173,6 @@ public class MainWindow extends Application implements ViewCallBack {
         HBox companyRow = new HBox(15, logoView, companyInfo);
         companyRow.setAlignment(Pos.CENTER_LEFT);
 
-        // ── Metrics grid ──────────────────────────────────────────────
         GridPane metricsGrid = new GridPane();
         metricsGrid.setHgap(40);
         metricsGrid.setVgap(12);
@@ -205,7 +201,6 @@ public class MainWindow extends Application implements ViewCallBack {
         metricsGrid.add(metricBox("52W Low", weekLowLabel), 2, 1);
         metricsGrid.add(metricBox("Price/Book", priceToBookLabel), 3, 1);
 
-        // ── Calculate button + score labels ───────────────────────────
         calculateButton = new Button("Calculate Valuation");
         calculateButton.setStyle("""
                 -fx-background-color: #2a2e39;
@@ -250,7 +245,6 @@ public class MainWindow extends Application implements ViewCallBack {
         signalLabel = new Label();
         signalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
-        // ── Trends button ─────────────────────────────────────────────
         trendsButton = new Button("Show Trends");
         trendsButton.setStyle("""
                 -fx-background-color: #2a2e39;
@@ -266,11 +260,9 @@ public class MainWindow extends Application implements ViewCallBack {
             controller.handleTrends();
         });
 
-        // ── Recommendation chart placeholder ──────────────────────────
         recommendationChart = new Pane();
         recommendationChart.setVisible(false);
 
-        // ── Stock Chart Panel ─────────────────────────────────────────
         stockChartPanel = new StockChartPanel(polygonClient);
         stockChartPanel.setTimeframeChangeListener((timeframe, oldPrice, currentPrice) -> {
             Platform.runLater(() -> {
@@ -288,7 +280,6 @@ public class MainWindow extends Application implements ViewCallBack {
             });
         });
 
-        // ── Related stocks ────────────────────────────────────────────
         Label relatedTitle = new Label("Related Stocks");
         relatedTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         relatedTitle.setStyle("-fx-text-fill: white;");
@@ -306,7 +297,6 @@ public class MainWindow extends Application implements ViewCallBack {
         HBox chartAndRelatedBox = new HBox(20, stockChartPanel, relatedBox);
         HBox.setHgrow(stockChartPanel, Priority.ALWAYS);
 
-        // ── Assemble results panel ────────────────────────────────────
         resultsPanel.getChildren().addAll(
                 companyRow,
                 new Separator(),
@@ -321,10 +311,8 @@ public class MainWindow extends Application implements ViewCallBack {
                 trendsButton,
                 recommendationChart);
 
-        // ── Wire search action ────────────────────────────────────────
         searchField.setOnAction(e -> handleSearch());
 
-        // ── Assemble root ─────────────────────────────────────────────
         Region topSpacer = new Region();
         topSpacer.prefHeightProperty().bind(scrollPane.heightProperty().multiply(0.15));
 
@@ -351,7 +339,7 @@ public class MainWindow extends Application implements ViewCallBack {
         stage.show();
     }
 
-    // ── View trigger methods ──────────────────────────────────────────
+    // Handles the user's search request and resets the current UI state.
     private void handleSearch() {
         errorLabel.setVisible(false);
         resultsPanel.setVisible(false);
@@ -369,7 +357,7 @@ public class MainWindow extends Application implements ViewCallBack {
         controller.handleSearch(searchField.getText());
     }
 
-    // ── ViewCallback implementations ──────────────────────────────────
+    // Callback when a stock search operation completes successfully.
     @Override
     public void onSearchSuccess(Fortune500 stock, StockSnapshot snapshot) {
         Platform.runLater(() -> {
@@ -447,15 +435,13 @@ public class MainWindow extends Application implements ViewCallBack {
         stockChartPanel.load(ticker);
     }
 
-    // ── Private view helpers ──────────────────────────────────────────
+    // Updates the UI components with fetched stock and snapshot data.
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
-        // ── From Fortune500 enum ──────────────────────────────────────
         companyNameLabel.setText(stock.getCompanyName());
         tickerLabel.setText(stock.name());
         industryLabel.setText(stock.getIndustry());
 
-        // ── From StockSnapshot ────────────────────────────────────────
         try {
             Image logo = new Image(snapshot.getLogo(), true);
             logoView.setImage(logo);
@@ -488,7 +474,6 @@ public class MainWindow extends Application implements ViewCallBack {
         grossMarginLabel.setText(String.format("%.2f%%", snapshot.getGrossMargin()));
         revenueYoyLabel.setText(String.format("%.2f%%", snapshot.getRevenueYoy()));
 
-        // ── Related stocks from enum ──────────────────────────────────
         relatedStocksPane.getChildren().clear();
         List<Fortune500> allRelated = controller.getMarketData().getByIndustry(stock);
         final List<Fortune500> relatedList = allRelated.size() > 16 ? allRelated.subList(0, 16) : allRelated;
@@ -539,6 +524,7 @@ public class MainWindow extends Application implements ViewCallBack {
         }).start();
     }
 
+    // Creates a reusable UI
     private VBox metricBox(String labelText, Label valueLabel) {
         Label label = new Label(labelText);
         label.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 12px;");

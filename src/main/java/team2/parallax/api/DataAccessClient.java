@@ -3,7 +3,7 @@ package team2.parallax.api;
 import com.google.gson.JsonObject;
 
 public interface DataAccessClient {
-    // ── Core data access methods ──────────────────────────────────
+    // Core data access methods
     /**
      * Makes a GET request to the given endpoint and returns
      * the response as a parsed JsonObject.
