@@ -34,13 +34,18 @@ public class MainWindow extends Application implements ViewCallBack {
     private Label tickerLabel;
     private Label industryLabel;
     private Label currentPriceLabel;
+    private Label priceDifferenceLabel;
     private Label peRatioLabel;
     private Label priceToBookLabel;
     private Label dividendYieldLabel;
     private Label weekHighLabel;
     private Label weekLowLabel;
+    private Label marketCapLabel;
+    private Label epsLabel;
+    private Label grossMarginLabel;
+    private Label revenueYoyLabel;
     private VBox resultsPanel;
-    private FlowPane relatedStocksPane;
+    private TilePane relatedStocksPane;
     private Label errorLabel;
     private TextField searchField;
     private Pane recommendationChart;
@@ -93,6 +98,7 @@ public class MainWindow extends Application implements ViewCallBack {
         searchField.setStyle("-fx-font-size: 14px; -fx-background-color: transparent; -fx-text-fill: white;");
         HBox.setHgrow(searchField, Priority.ALWAYS);
 
+        // Old search color #5cb85c or #51A99B
         Button searchButton = new Button("Search");
         searchButton.setStyle("""
                 -fx-background-color: #5cb85c;
@@ -139,6 +145,13 @@ public class MainWindow extends Application implements ViewCallBack {
         companyNameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         companyNameLabel.setStyle("-fx-text-fill: white;");
 
+        currentPriceLabel = new Label();
+        currentPriceLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        currentPriceLabel.setStyle("-fx-text-fill: white;");
+
+        priceDifferenceLabel = new Label();
+        priceDifferenceLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+
         tickerLabel = new Label();
         tickerLabel.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 13px;");
 
@@ -151,7 +164,13 @@ public class MainWindow extends Application implements ViewCallBack {
         HBox tickerIndustryRow = new HBox(6, tickerLabel, tickerIndustrySeparator, industryLabel);
         tickerIndustryRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox companyInfo = new VBox(4, companyNameLabel, tickerIndustryRow);
+        HBox priceBox = new HBox(8, currentPriceLabel, priceDifferenceLabel);
+        priceBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox nameAndPriceRow = new HBox(15, companyNameLabel, priceBox);
+        nameAndPriceRow.setAlignment(Pos.BASELINE_LEFT);
+
+        VBox companyInfo = new VBox(4, nameAndPriceRow, tickerIndustryRow);
         companyInfo.setAlignment(Pos.CENTER_LEFT);
 
         HBox companyRow = new HBox(15, logoView, companyInfo);
@@ -163,19 +182,28 @@ public class MainWindow extends Application implements ViewCallBack {
         metricsGrid.setVgap(12);
         metricsGrid.setPadding(new Insets(10, 0, 10, 0));
 
-        currentPriceLabel = new Label();
         peRatioLabel = new Label();
         priceToBookLabel = new Label();
         dividendYieldLabel = new Label();
         weekHighLabel = new Label();
         weekLowLabel = new Label();
+        marketCapLabel = new Label();
+        epsLabel = new Label();
+        grossMarginLabel = new Label();
+        revenueYoyLabel = new Label();
 
-        metricsGrid.add(metricBox("Current Price", currentPriceLabel), 0, 0);
-        metricsGrid.add(metricBox("P/E Ratio", peRatioLabel), 1, 0);
-        metricsGrid.add(metricBox("Price/Book", priceToBookLabel), 0, 1);
-        metricsGrid.add(metricBox("Div. Yield", dividendYieldLabel), 1, 1);
-        metricsGrid.add(metricBox("52W High", weekHighLabel), 0, 2);
-        metricsGrid.add(metricBox("52W Low", weekLowLabel), 1, 2);
+        // Row 1 (Index 0)
+        metricsGrid.add(metricBox("P/E Ratio", peRatioLabel), 0, 0);
+        metricsGrid.add(metricBox("Price/Book", priceToBookLabel), 1, 0);
+        metricsGrid.add(metricBox("Market Cap", marketCapLabel), 2, 0);
+        metricsGrid.add(metricBox("EPS", epsLabel), 3, 0);
+        metricsGrid.add(metricBox("Gross Margin %", grossMarginLabel), 4, 0);
+        metricsGrid.add(metricBox("Revenue YoY %", revenueYoyLabel), 5, 0);
+        
+        // Row 2 (Index 1)
+        metricsGrid.add(metricBox("Div. Yield", dividendYieldLabel), 0, 1);
+        metricsGrid.add(metricBox("52W High", weekHighLabel), 1, 1);
+        metricsGrid.add(metricBox("52W Low", weekLowLabel), 2, 1);
 
         // ── Calculate button + score labels ───────────────────────────
         calculateButton = new Button("Calculate Valuation");
@@ -218,21 +246,44 @@ public class MainWindow extends Application implements ViewCallBack {
 
         // ── Stock Chart Panel ─────────────────────────────────────────
         stockChartPanel = new StockChartPanel(polygonClient);
+        stockChartPanel.setTimeframeChangeListener((timeframe, oldPrice, currentPrice) -> {
+            Platform.runLater(() -> {
+                double diff = currentPrice - oldPrice;
+                double pct = (oldPrice > 0) ? (diff / oldPrice) * 100.0 : 0;
+                String sign = diff >= 0 ? "+" : "";
+                String color = diff >= 0 ? "#4cd137" : "#e74c3c";
+
+                currentPriceLabel.setText(String.format("%.2f", currentPrice));
+                currentPriceLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+                priceDifferenceLabel.setText(String.format("%s%.2f ( %s%.2f %% )", sign, diff, sign, pct));
+                priceDifferenceLabel
+                        .setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+            });
+        });
 
         // ── Related stocks ────────────────────────────────────────────
         Label relatedTitle = new Label("Related Stocks");
         relatedTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         relatedTitle.setStyle("-fx-text-fill: white;");
 
-        relatedStocksPane = new FlowPane();
+        relatedStocksPane = new TilePane();
         relatedStocksPane.setHgap(8);
         relatedStocksPane.setVgap(8);
+        relatedStocksPane.setPrefColumns(2);
+
+        VBox relatedBox = new VBox(10, relatedTitle, relatedStocksPane);
+        relatedBox.setMinWidth(150);
+        relatedBox.setMaxWidth(200);
+
+        HBox chartAndRelatedBox = new HBox(20, stockChartPanel, relatedBox);
+        HBox.setHgrow(stockChartPanel, Priority.ALWAYS);
 
         // ── Assemble results panel ────────────────────────────────────
         resultsPanel.getChildren().addAll(
                 companyRow,
                 new Separator(),
-                stockChartPanel,
+                chartAndRelatedBox,
                 new Separator(),
                 metricsGrid,
                 new Separator(),
@@ -241,10 +292,7 @@ public class MainWindow extends Application implements ViewCallBack {
                 signalLabel,
                 new Separator(),
                 trendsButton,
-                recommendationChart,
-                new Separator(),
-                relatedTitle,
-                relatedStocksPane);
+                recommendationChart);
 
         // ── Wire search action ────────────────────────────────────────
         searchField.setOnAction(e -> handleSearch());
@@ -255,6 +303,7 @@ public class MainWindow extends Application implements ViewCallBack {
 
         Region bottomSpacer = new Region();
         VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
+        bottomSpacer.setMinHeight(300);
 
         resultsPanel.visibleProperty().addListener((obs, oldV, newV) -> {
             if (newV && topSpacer.isVisible()) {
@@ -370,6 +419,7 @@ public class MainWindow extends Application implements ViewCallBack {
     public void onChartLoad(String ticker) {
         stockChartPanel.load(ticker);
     }
+
     // ── Private view helpers ──────────────────────────────────────────
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
@@ -377,7 +427,6 @@ public class MainWindow extends Application implements ViewCallBack {
         companyNameLabel.setText(stock.getCompanyName());
         tickerLabel.setText(stock.name());
         industryLabel.setText(stock.getIndustry());
-
 
         // ── From StockSnapshot ────────────────────────────────────────
         try {
@@ -387,12 +436,30 @@ public class MainWindow extends Application implements ViewCallBack {
             logoView.setImage(null);
         }
 
-        currentPriceLabel.setText("$" + String.format("%.2f", snapshot.getCurrentPrice()));
+        // Price will be overwritten by Polygon's listener, but initialize Finnhub
+        // values
+        double chg = snapshot.getChange();
+        double pct = snapshot.getChangePercent();
+        String sign = chg >= 0 ? "+" : "";
+        String color = chg >= 0 ? "#4cd137" : "#e74c3c";
+        currentPriceLabel.setText(String.format("%.2f", snapshot.getCurrentPrice()));
+        currentPriceLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        priceDifferenceLabel.setText(String.format("%s%.2f$ (%s%.2f%% )", sign, chg, sign, pct));
+        priceDifferenceLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+
         peRatioLabel.setText(String.format("%.2f", snapshot.getPeRatio()));
         priceToBookLabel.setText(String.format("%.2f", snapshot.getPriceToBook()));
         dividendYieldLabel.setText(String.format("%.4f", snapshot.getDividendYield()));
         weekHighLabel.setText("$" + String.format("%.2f", snapshot.getWeekHigh52()));
         weekLowLabel.setText("$" + String.format("%.2f", snapshot.getWeekLow52()));
+        
+        double mc = snapshot.getMarketCap();
+        String mcStr = (mc >= 1000) ? String.format("%.2fB", mc / 1000) : String.format("%.0fM", mc);
+        marketCapLabel.setText(mcStr);
+        epsLabel.setText(String.format("$%.2f", snapshot.getEps()));
+        grossMarginLabel.setText(String.format("%.2f%%", snapshot.getGrossMargin()));
+        revenueYoyLabel.setText(String.format("%.2f%%", snapshot.getRevenueYoy()));
 
         // ── Related stocks from enum ──────────────────────────────────
         relatedStocksPane.getChildren().clear();

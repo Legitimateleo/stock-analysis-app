@@ -10,22 +10,21 @@ public class CalculationMethods {
         double pe = snapshot.getPeRatio();
 
         // P/E of 0 means data unavailable
-        if (pe <= 1)
+        if (pe <= 0)
             return 5.0;
 
+        // edited pe's based on avg sectors
         if (pe < 8)
             return 10.0;
-        else if (pe < 12)
+        else if (pe < 14)
             return 9.0;
         else if (pe < 20)
             return 8.0;
-        else if (pe < 30)
+        else if (pe < 24)
             return 7.0;
-        else if (pe < 40)
+        else if (pe < 30)
             return 6.0;
         else if (pe < 60)
-            return 5.0;
-        else if (pe < 80)
             return 4.0;
         else if (pe < 100)
             return 3.0;

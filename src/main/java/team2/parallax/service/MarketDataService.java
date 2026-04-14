@@ -96,6 +96,7 @@ public class MarketDataService implements MarketDataProvider {
         JsonObject metricsData = client.get("stock/metric?symbol=" + symbol + "&metric=all");
         double peRatio = 0, priceToBook = 0, dividendYield = 0,
                 weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
+        double marketCap = 0, eps = 0, grossMargin = 0, revenueYoy = 0;
         if (metricsData != null) {
             JsonObject m = metricsData.getAsJsonObject("metric");
             if (m != null) {
@@ -105,6 +106,10 @@ public class MarketDataService implements MarketDataProvider {
                 weekHigh52           = getMetricValue(m, "52WeekHigh");
                 weekLow52            = getMetricValue(m, "52WeekLow");
                 freeCashFlowPerShare = getMetricValue(m, "cashFlowPerShareTTM");
+                marketCap            = getMetricValue(m, "marketCapitalization");
+                eps                  = getMetricValue(m, "epsTTM");
+                grossMargin          = getMetricValue(m, "grossMarginTTM");
+                revenueYoy           = getMetricValue(m, "revenueGrowthTTMYoy");
             }
         }
 
@@ -118,7 +123,8 @@ public class MarketDataService implements MarketDataProvider {
 
         return new StockSnapshot(currentPrice, change, changePercent,
                 peRatio, priceToBook, dividendYield,
-                weekHigh52, weekLow52, freeCashFlowPerShare, logo);
+                weekHigh52, weekLow52, freeCashFlowPerShare,
+                marketCap, eps, grossMargin, revenueYoy, logo);
     }
 
     public StockSnapshot lookup(String input) {
