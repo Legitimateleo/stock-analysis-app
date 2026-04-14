@@ -217,6 +217,33 @@ public class MainWindow extends Application implements ViewCallBack {
         calculateButton.setVisible(false);
         calculateButton.setOnAction(e -> controller.handleCalculate());
 
+        Tooltip calcTooltip = new Tooltip(
+                "Valuation is scored 0–10 by averaging three factors:\n\n"
+              + "1) P/E Score — Lower P/E ratios score higher (e.g. P/E < 8 = 10 pts, "
+              + "P/E > 200 = 1 pt). A low P/E suggests the stock is cheap relative to earnings.\n\n"
+              + "2) 52-Week Position — Compares the current price to the midpoint of its "
+              + "52-week high and low. Trading well below the midpoint scores higher "
+              + "(potential undervaluation).\n\n"
+              + "3) Sector P/E — Compares the stock's P/E to its industry average. "
+              + "A P/E significantly below the sector average scores higher.\n\n"
+              + "Signals:  ≥7 Strong Buy · ≥5.1 Buy · 5 Hold · ≥3 Sell · <3 Strong Sell"
+        );
+        calcTooltip.setStyle("""
+                -fx-background-color: #2a2e39;
+                -fx-text-fill: #e0e0e0;
+                -fx-font-size: 12px;
+                -fx-padding: 10px 14px;
+                -fx-background-radius: 6px;
+                -fx-border-color: #3f4553;
+                -fx-border-radius: 6px;
+                """);
+        calcTooltip.setWrapText(true);
+        calcTooltip.setMaxWidth(500);
+        calcTooltip.setShowDelay(javafx.util.Duration.millis(200));
+        calcTooltip.setShowDuration(javafx.util.Duration.seconds(30));
+        calcTooltip.setHideDelay(javafx.util.Duration.millis(100));
+        calculateButton.setTooltip(calcTooltip);
+
         finalScoreLabel = new Label();
         finalScoreLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         finalScoreLabel.setStyle("-fx-text-fill: white;");
@@ -517,6 +544,48 @@ public class MainWindow extends Application implements ViewCallBack {
         label.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 12px;");
         valueLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         valueLabel.setStyle("-fx-text-fill: white;");
-        return new VBox(2, label, valueLabel);
+
+        VBox box = new VBox(2, label, valueLabel);
+
+        String description = getMetricDescription(labelText);
+        if (description != null) {
+            Tooltip tooltip = new Tooltip(description);
+            tooltip.setStyle("""
+                    -fx-background-color: #2a2e39;
+                    -fx-text-fill: #e0e0e0;
+                    -fx-font-size: 12px;
+                    -fx-padding: 8px 12px;
+                    -fx-background-radius: 6px;
+                    -fx-border-color: #3f4553;
+                    -fx-border-radius: 6px;
+                    """);
+            tooltip.setWrapText(true);
+            tooltip.setMaxWidth(280);
+            tooltip.setShowDelay(javafx.util.Duration.millis(200));
+            tooltip.setShowDuration(javafx.util.Duration.seconds(15));
+            tooltip.setHideDelay(javafx.util.Duration.millis(100));
+            Tooltip.install(box, tooltip);
+
+            box.setOnMouseEntered(e -> box.setStyle("-fx-background-color: #2a2e39; -fx-background-radius: 6px; -fx-padding: 4px;"));
+            box.setOnMouseExited(e -> box.setStyle("-fx-background-color: transparent; -fx-padding: 4px;"));
+            box.setStyle("-fx-padding: 4px;");
+        }
+
+        return box;
+    }
+
+    private String getMetricDescription(String metric) {
+        return switch (metric) {
+            case "P/E Ratio" -> "Price-to-Earnings ratio compares a company's stock price to its earnings per share. A higher P/E may indicate expected future growth, while a lower P/E can signal undervaluation.";
+            case "Market Cap" -> "Market capitalization is the total value of a company's outstanding shares. It reflects the company's size and is used to classify stocks as large-cap, mid-cap, or small-cap.";
+            case "EPS" -> "Earnings Per Share represents the portion of a company's profit allocated to each share. Higher EPS generally indicates greater profitability.";
+            case "Gross Margin %" -> "Gross margin measures the percentage of revenue remaining after subtracting the cost of goods sold. A higher margin indicates better efficiency in production.";
+            case "Revenue YoY %" -> "Revenue Year-over-Year growth shows how much a company's revenue has increased or decreased compared to the same period last year.";
+            case "Div. Yield" -> "Dividend yield is the annual dividend payment divided by the stock price, expressed as a percentage. It shows how much income you earn per dollar invested.";
+            case "52W High" -> "The 52-week high is the highest price the stock has traded at during the past year. It helps gauge how close the stock is to its recent peak.";
+            case "52W Low" -> "The 52-week low is the lowest price the stock has traded at during the past year. It helps assess how far the stock has recovered from its recent bottom.";
+            case "Price/Book" -> "Price-to-Book ratio compares a stock's market price to its book value (net assets). A lower ratio may indicate the stock is undervalued relative to its assets.";
+            default -> null;
+        };
     }
 }
