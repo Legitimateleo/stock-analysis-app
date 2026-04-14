@@ -275,20 +275,21 @@ public class StockChartPanel extends VBox {
         final String span;
         final int limit;
 
+        // minute changes 10m 20m, less calls = faster
         // Changed multi to 5+ or 15+ for less rate limit of polygon, less bars =
         // better.
         switch (tf) {
             case "1D" -> {
                 // To get 200 prior 5-min bars, fetch ~4 days instead of 1
                 fromDate = stepBack(lastTD, 4).toString();
-                mult = 5;
+                mult = 10;
                 span = "minute";
                 limit = 5000;
             }
             case "5D" -> {
                 // To get 200 prior 15-min bars, fetch ~14 days instead of 5
                 fromDate = stepBack(lastTD, 14).toString();
-                mult = 15;
+                mult = 20;
                 span = "minute";
                 limit = 5000;
             }
@@ -418,7 +419,8 @@ public class StockChartPanel extends VBox {
             case "1Y" -> 252;
             case "2Y" -> 504;
             case "1D" -> {
-                if (fetchedTs.isEmpty()) yield 0;
+                if (fetchedTs.isEmpty())
+                    yield 0;
                 LocalDate lastDay = Instant.ofEpochMilli(fetchedTs.get(fetchedTs.size() - 1)).atZone(ET).toLocalDate();
                 int count = 0;
                 for (int i = fetchedTs.size() - 1; i >= 0; i--) {
