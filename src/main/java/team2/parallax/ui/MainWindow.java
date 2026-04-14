@@ -490,7 +490,8 @@ public class MainWindow extends Application implements ViewCallBack {
 
         // ── Related stocks from enum ──────────────────────────────────
         relatedStocksPane.getChildren().clear();
-        List<Fortune500> relatedList = controller.getMarketData().getByIndustry(stock);
+        List<Fortune500> allRelated = controller.getMarketData().getByIndustry(stock);
+        final List<Fortune500> relatedList = allRelated.size() > 16 ? allRelated.subList(0, 16) : allRelated;
         for (Fortune500 related : relatedList) {
             final String relatedName = related.name();
             Label chip = new Label(relatedName);
