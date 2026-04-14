@@ -81,12 +81,12 @@ public class MainWindow extends Application implements ViewCallBack {
         root.setStyle("-fx-background-color: #1a1d24;");
         root.setAlignment(Pos.TOP_CENTER);
 
-        // ── ScrollPane ────────────────────────────────────────────────
+        // starting pane
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(false);
         scrollPane.setStyle("-fx-background: #1a1d24; -fx-background-color: #1a1d24;");
-        Scene sceneScroll = new Scene(scrollPane, 800, 950);
+        Scene sceneScroll = new Scene(scrollPane, 1000, 900);
 
         // ── Title ─────────────────────────────────────────────────────
         Label title = new Label("Parallax");
@@ -194,16 +194,16 @@ public class MainWindow extends Application implements ViewCallBack {
 
         // Row 1 (Index 0)
         metricsGrid.add(metricBox("P/E Ratio", peRatioLabel), 0, 0);
-        metricsGrid.add(metricBox("Price/Book", priceToBookLabel), 1, 0);
-        metricsGrid.add(metricBox("Market Cap", marketCapLabel), 2, 0);
-        metricsGrid.add(metricBox("EPS", epsLabel), 3, 0);
-        metricsGrid.add(metricBox("Gross Margin %", grossMarginLabel), 4, 0);
-        metricsGrid.add(metricBox("Revenue YoY %", revenueYoyLabel), 5, 0);
-        
+        metricsGrid.add(metricBox("Market Cap", marketCapLabel), 1, 0);
+        metricsGrid.add(metricBox("EPS", epsLabel), 2, 0);
+        metricsGrid.add(metricBox("Gross Margin %", grossMarginLabel), 3, 0);
+        metricsGrid.add(metricBox("Revenue YoY %", revenueYoyLabel), 4, 0);
+
         // Row 2 (Index 1)
         metricsGrid.add(metricBox("Div. Yield", dividendYieldLabel), 0, 1);
         metricsGrid.add(metricBox("52W High", weekHighLabel), 1, 1);
         metricsGrid.add(metricBox("52W Low", weekLowLabel), 2, 1);
+        metricsGrid.add(metricBox("Price/Book", priceToBookLabel), 3, 1);
 
         // ── Calculate button + score labels ───────────────────────────
         calculateButton = new Button("Calculate Valuation");
@@ -272,8 +272,9 @@ public class MainWindow extends Application implements ViewCallBack {
         relatedStocksPane.setVgap(8);
         relatedStocksPane.setPrefColumns(2);
 
+        // Sidebar related stocks + image testing has to be 180+ for 2 vertical
         VBox relatedBox = new VBox(10, relatedTitle, relatedStocksPane);
-        relatedBox.setMinWidth(150);
+        relatedBox.setMinWidth(180);
         relatedBox.setMaxWidth(200);
 
         HBox chartAndRelatedBox = new HBox(20, stockChartPanel, relatedBox);
@@ -303,7 +304,7 @@ public class MainWindow extends Application implements ViewCallBack {
 
         Region bottomSpacer = new Region();
         VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
-        bottomSpacer.setMinHeight(300);
+        bottomSpacer.setMinHeight(200);
 
         resultsPanel.visibleProperty().addListener((obs, oldV, newV) -> {
             if (newV && topSpacer.isVisible()) {
@@ -453,7 +454,7 @@ public class MainWindow extends Application implements ViewCallBack {
         dividendYieldLabel.setText(String.format("%.4f", snapshot.getDividendYield()));
         weekHighLabel.setText("$" + String.format("%.2f", snapshot.getWeekHigh52()));
         weekLowLabel.setText("$" + String.format("%.2f", snapshot.getWeekLow52()));
-        
+
         double mc = snapshot.getMarketCap();
         String mcStr = (mc >= 1000) ? String.format("%.2fB", mc / 1000) : String.format("%.0fM", mc);
         marketCapLabel.setText(mcStr);
@@ -463,7 +464,8 @@ public class MainWindow extends Application implements ViewCallBack {
 
         // ── Related stocks from enum ──────────────────────────────────
         relatedStocksPane.getChildren().clear();
-        for (Fortune500 related : controller.getMarketData().getByIndustry(stock)) {
+        List<Fortune500> relatedList = controller.getMarketData().getByIndustry(stock);
+        for (Fortune500 related : relatedList) {
             final String relatedName = related.name();
             Label chip = new Label(relatedName);
             chip.setStyle("""
@@ -481,6 +483,33 @@ public class MainWindow extends Application implements ViewCallBack {
             });
             relatedStocksPane.getChildren().add(chip);
         }
+
+        // Fetch logos sequentially in background to respect rate limits
+        new Thread(() -> {
+            for (int i = 0; i < relatedList.size(); i++) {
+                String relatedName = relatedList.get(i).name();
+                String logoUrl = controller.getMarketData().getLogoUrl(relatedName);
+                if (logoUrl != null && !logoUrl.equals("N/A") && !logoUrl.isEmpty()) {
+                    Image icon = new Image(logoUrl, true);
+                    final int index = i;
+                    Platform.runLater(() -> {
+                        // Ensure we are still showing the same related stocks (user didn't search
+                        // again)
+                        if (relatedStocksPane.getChildren().size() > index) {
+                            javafx.scene.Node node = relatedStocksPane.getChildren().get(index);
+                            if (node instanceof Label chip && chip.getText().equals(relatedName)) {
+                                ImageView chipIcon = new ImageView(icon);
+                                chipIcon.setFitWidth(16);
+                                chipIcon.setFitHeight(16);
+                                chipIcon.setPreserveRatio(true);
+                                chip.setGraphic(chipIcon);
+                                chip.setGraphicTextGap(6);
+                            }
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     private VBox metricBox(String labelText, Label valueLabel) {

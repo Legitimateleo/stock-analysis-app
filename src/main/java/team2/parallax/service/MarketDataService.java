@@ -114,17 +114,21 @@ public class MarketDataService implements MarketDataProvider {
         }
 
         // ── 3 call: Logo only ─────────────────────────────────────────
-        JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
-        String logo = "N/A";
-        if (profileData != null && profileData.has("logo")
-                && !profileData.get("logo").isJsonNull()) {
-            logo = profileData.get("logo").getAsString();
-        }
+        String logo = getLogoUrl(symbol);
 
         return new StockSnapshot(currentPrice, change, changePercent,
                 peRatio, priceToBook, dividendYield,
                 weekHigh52, weekLow52, freeCashFlowPerShare,
                 marketCap, eps, grossMargin, revenueYoy, logo);
+    }
+    
+    public String getLogoUrl(String symbol) {
+        JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
+        if (profileData != null && profileData.has("logo")
+                && !profileData.get("logo").isJsonNull()) {
+            return profileData.get("logo").getAsString();
+        }
+        return "N/A";
     }
 
     public StockSnapshot lookup(String input) {

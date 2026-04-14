@@ -284,7 +284,7 @@ public enum Fortune500 {
     FE("FirstEnergy Corp", "Utilities"),
     HES("Hess Corp", "Energy"),
     LH("Labcorp Holdings Inc", "Health Care"),
-    WDC("Western Digital Corp", "Technology"),
+    WDC("Western Digital Corp", "Semiconductors"),
     UNM("Unum Group", "Insurance"),
     DVA("DaVita Inc", "Health Care"),
     K("Kellanova", "Food Products"),
@@ -445,16 +445,11 @@ public enum Fortune500 {
     USO("United States Oil", "Energy"),
     SPY("S&P500 Index", "Index"),
     QQQ("Nasdaq 100 Index", "Index"),
+    VOO("Vanguard S&P 500 ETF", "Index"),
+    IVV("iShares Core S&P 500 ETF", "Index"),
     STX("Seagate Technology", "Semiconductors"),
-    NBIS("Nebius Group NV", "Semiconductors"),
-    SOXL("Direxion Daily Semiconductor Bull 3X Shares", "Leveraged ETF"),
-    KORU("Direxion Daily MSCI South Korea Bull 3X Shares", "Leveraged ETF"),
-    TQQQ("ProShares UltraPro QQQ", "Leveraged ETF"),
-    MUU("Direxion Daily MU Bull 2X Shares", "Leveraged ETF"),
-    SNXX("Tradr 2X Long SNDK Daily ETF", "Leveraged ETF"),
-    LITX("Tradr 2X Long LITE Daily ETF", "Leveraged ETF"),
-    COHX("Tradr 2X Long COHR Daily ETF", "Leveraged ETF"),
-    WDCX("Tradr 2X Long WDC Daily ETF", "Leveraged ETF");
+    NBIS("Nebius Group NV", "Technology"),
+    PLTR("Palantir Technologies Inc", "Aerospace & Defense");
 
     private final String companyName;
     private final String industry;
