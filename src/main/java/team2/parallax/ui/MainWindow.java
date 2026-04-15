@@ -42,7 +42,6 @@ public class MainWindow extends Application implements ViewCallBack {
     private Label weekLowLabel;
     private Label marketCapLabel;
     private Label epsLabel;
-    private Label grossMarginLabel;
     private Label revenueYoyLabel;
     private VBox resultsPanel;
     private TilePane relatedStocksPane;
@@ -185,15 +184,13 @@ public class MainWindow extends Application implements ViewCallBack {
         weekLowLabel = new Label();
         marketCapLabel = new Label();
         epsLabel = new Label();
-        grossMarginLabel = new Label();
         revenueYoyLabel = new Label();
 
         // Row 1 (Index 0)
         metricsGrid.add(metricBox("P/E Ratio", peRatioLabel), 0, 0);
         metricsGrid.add(metricBox("Market Cap", marketCapLabel), 1, 0);
         metricsGrid.add(metricBox("EPS", epsLabel), 2, 0);
-        metricsGrid.add(metricBox("Gross Margin %", grossMarginLabel), 3, 0);
-        metricsGrid.add(metricBox("Revenue YoY %", revenueYoyLabel), 4, 0);
+        metricsGrid.add(metricBox("Revenue YoY %", revenueYoyLabel), 3, 0);
 
         // Row 2 (Index 1)
         metricsGrid.add(metricBox("Div. Yield", dividendYieldLabel), 0, 1);
@@ -471,7 +468,6 @@ public class MainWindow extends Application implements ViewCallBack {
         String mcStr = (mc >= 1000) ? String.format("%.2fB", mc / 1000) : String.format("%.0fM", mc);
         marketCapLabel.setText(mcStr);
         epsLabel.setText(String.format("$%.2f", snapshot.getEps()));
-        grossMarginLabel.setText(String.format("%.2f%%", snapshot.getGrossMargin()));
         revenueYoyLabel.setText(String.format("%.2f%%", snapshot.getRevenueYoy()));
 
         relatedStocksPane.getChildren().clear();
@@ -570,8 +566,6 @@ public class MainWindow extends Application implements ViewCallBack {
                 "Market capitalization is the total value of a company's outstanding shares. It reflects the company's size and is used to classify stocks as large-cap, mid-cap, or small-cap.";
             case "EPS" ->
                 "Earnings Per Share represents the portion of a company's profit allocated to each share. Higher EPS generally indicates greater profitability.";
-            case "Gross Margin %" ->
-                "Gross margin measures the percentage of revenue remaining after subtracting the cost of goods sold. A higher margin indicates better efficiency in production.";
             case "Revenue YoY %" ->
                 "Revenue Year-over-Year growth shows how much a company's revenue has increased or decreased compared to the same period last year.";
             case "Div. Yield" ->

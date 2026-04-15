@@ -11,7 +11,6 @@ public class FinancialMetrics {
     // Profitability
     private final double returnOnEquity;
     private final double returnOnAssets;
-    private final double grossMargin;
     private final double operatingMargin;
     private final double netProfitMargin;
 
@@ -28,7 +27,7 @@ public class FinancialMetrics {
 
     public FinancialMetrics(double peRatio, double priceToBook, double priceToSales,
                             double eps, double dividendYield, double returnOnEquity,
-                            double returnOnAssets, double grossMargin, double operatingMargin,
+                            double returnOnAssets, double operatingMargin,
                             double netProfitMargin, double currentRatio, double debtToEquity,
                             double freeCashFlowPerShare, double revenuePerShare,
                             double weekHigh52, double weekLow52, double beta) {
@@ -39,7 +38,6 @@ public class FinancialMetrics {
         this.dividendYield = dividendYield;
         this.returnOnEquity = returnOnEquity;
         this.returnOnAssets = returnOnAssets;
-        this.grossMargin = grossMargin;
         this.operatingMargin = operatingMargin;
         this.netProfitMargin = netProfitMargin;
         this.currentRatio = currentRatio;
@@ -61,7 +59,6 @@ public class FinancialMetrics {
     // Profitability
     public double getReturnOnEquity()     { return returnOnEquity; }
     public double getReturnOnAssets()     { return returnOnAssets; }
-    public double getGrossMargin()        { return grossMargin; }
     public double getOperatingMargin()    { return operatingMargin; }
     public double getNetProfitMargin()    { return netProfitMargin; }
 
