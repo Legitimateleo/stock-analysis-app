@@ -350,6 +350,14 @@ public class MainWindow extends Application implements ViewCallBack {
         if (chartIndex >= 0) {
             resultsPanel.getChildren().set(chartIndex, recommendationChart);
         }
+        String input = searchField.getText();
+        if(input.length() > 30){
+            errorLabel.setText("Search input must be 30 characters.");
+            errorLabel.setVisible(true);
+            searchField.clear();
+            searchField.getParent().requestFocus();
+            return;
+        }
 
         controller.handleSearch(searchField.getText());
     }
@@ -372,6 +380,8 @@ public class MainWindow extends Application implements ViewCallBack {
         Platform.runLater(() -> {
             errorLabel.setText(message);
             errorLabel.setVisible(true);
+            searchField.clear();
+            searchField.getParent().requestFocus();
         });
     }
 
