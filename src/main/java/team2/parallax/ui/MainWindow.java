@@ -92,7 +92,7 @@ public class MainWindow extends Application implements ViewCallBack {
         title.setFont(Font.font("SansSerif", FontWeight.BOLD, 64));
         title.setStyle("-fx-text-fill: white;");
         searchField = new TextField();
-        searchField.setPromptText("Search by ticker or company name.     Example: NVDA…");
+        searchField.setPromptText("Search by ticker or company name.   Example: NVDA");
         searchField.setStyle("-fx-font-size: 14px; -fx-background-color: transparent; -fx-text-fill: white;");
         HBox.setHgrow(searchField, Priority.ALWAYS);
 
