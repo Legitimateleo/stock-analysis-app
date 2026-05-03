@@ -5,6 +5,7 @@ import javafx.concurrent.Task;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
+import team2.parallax.service.CalculationMethods;
 import team2.parallax.service.MarketDataProvider;
 import team2.parallax.service.ValidationScore;
 
@@ -98,9 +99,8 @@ public class ParallaxController {
             view.onScoreCalculatedFailure("Please search for a stock first.");
             return;
         }
-        //
-        String industry = currentStock.getIndustry(); // ← resolve here
-        ValidationScore valuation = marketData.getValuation();
+        String industry = currentStock.getIndustry();
+        ValidationScore valuation = new ValidationScore(new CalculationMethods());
         double score = valuation.getFinalScore(industry, currentStockSnapshot);
         String signal = valuation.getSignal(industry, currentStockSnapshot);
         view.onScoreCalculated(score, signal);
