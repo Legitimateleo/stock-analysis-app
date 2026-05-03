@@ -13,7 +13,7 @@ public enum SectorPE {
     AIRLINES("Airlines", 31.50),
     ENERGY("Energy", 21.14),
     INDUSTRIAL_CONGLOMERATES("Industrial Conglomerates", 25.14),
-    TECHNOLOGY("Technology", 29.96),
+    TECHNOLOGY("Technology", 40.96),
     METALS_AND_MINING("Metals & Mining", 33.24),
     BEVERAGES("Beverages", 25.60),
     TEXTILES_APPAREL_AND_LUXURY_GOODS("Textiles, Apparel & Luxury Goods", 18.75),
@@ -22,7 +22,7 @@ public enum SectorPE {
     TRADING_COMPANIES_AND_DISTRIBUTORS("Trading Companies & Distributors", 23.44),
     FINANCIAL_SERVICES("Financial Services", 24.44),
     LOGISTICS_AND_TRANSPORTATION("Logistics & Transportation", 48.77),
-    SEMICONDUCTORS("Semiconductors", 43.02),
+    SEMICONDUCTORS("Semiconductors", 60.02),
     BANKING("Banking", 11.99),
     COMMUNICATIONS("Communications", 31.24),
     MEDIA("Media", 29.62),
@@ -51,8 +51,13 @@ public enum SectorPE {
         this.averagePE = averagePE;
     }
 
-    public String getIndustryName() { return industryName; }
-    public double getAveragePE()    { return averagePE; }
+    public String getIndustryName() {
+        return industryName;
+    }
+
+    public double getAveragePE() {
+        return averagePE;
+    }
 
     public static double getAverageForIndustry(String industry) {
         for (SectorPE sector : values()) {
