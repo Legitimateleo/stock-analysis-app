@@ -96,6 +96,7 @@ public class MarketDataService implements MarketDataProvider {
         JsonObject metricsData = client.get("stock/metric?symbol=" + symbol + "&metric=all");
         double peRatio = 0, priceToBook = 0, dividendYield = 0,
                 weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
+        double marketCap = 0, eps = 0, revenueYoy = 0;
         if (metricsData != null) {
             JsonObject m = metricsData.getAsJsonObject("metric");
             if (m != null) {
@@ -105,20 +106,28 @@ public class MarketDataService implements MarketDataProvider {
                 weekHigh52           = getMetricValue(m, "52WeekHigh");
                 weekLow52            = getMetricValue(m, "52WeekLow");
                 freeCashFlowPerShare = getMetricValue(m, "cashFlowPerShareTTM");
+                marketCap            = getMetricValue(m, "marketCapitalization");
+                eps                  = getMetricValue(m, "epsTTM");
+                revenueYoy           = getMetricValue(m, "revenueGrowthTTMYoy");
             }
         }
 
         // ── 3 call: Logo only ─────────────────────────────────────────
-        JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
-        String logo = "N/A";
-        if (profileData != null && profileData.has("logo")
-                && !profileData.get("logo").isJsonNull()) {
-            logo = profileData.get("logo").getAsString();
-        }
+        String logo = getLogoUrl(symbol);
 
         return new StockSnapshot(currentPrice, change, changePercent,
                 peRatio, priceToBook, dividendYield,
-                weekHigh52, weekLow52, freeCashFlowPerShare, logo);
+                weekHigh52, weekLow52, freeCashFlowPerShare,
+                marketCap, eps, revenueYoy, logo);
+    }
+    
+    public String getLogoUrl(String symbol) {
+        JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
+        if (profileData != null && profileData.has("logo")
+                && !profileData.get("logo").isJsonNull()) {
+            return profileData.get("logo").getAsString();
+        }
+        return "N/A";
     }
 
     public StockSnapshot lookup(String input) {
@@ -165,7 +174,7 @@ public class MarketDataService implements MarketDataProvider {
         return count > 0 ? total / count : 0;
     }
 
-    public ValidationScore getValuation(Fortune500 stock, StockSnapshot snapshot) {
+    public ValidationScore getValuation() {
         return new ValidationScore( new CalculationMethods());
     }
 }

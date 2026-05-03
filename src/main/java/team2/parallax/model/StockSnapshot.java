@@ -10,12 +10,17 @@ public class StockSnapshot {
     private final double weekHigh52;
     private final double weekLow52;
     private final double freeCashFlowPerShare;
+    private final double marketCap;
+    private final double eps;
+    private final double revenueYoy;
     private final String logo;
 
     public StockSnapshot(double currentPrice, double change, double changePercent,
                          double peRatio, double priceToBook, double dividendYield,
                          double weekHigh52, double weekLow52,
-                         double freeCashFlowPerShare, String logo) {
+                         double freeCashFlowPerShare,
+                         double marketCap, double eps,
+                         double revenueYoy, String logo) {
         this.currentPrice         = currentPrice;
         this.change               = change;
         this.changePercent        = changePercent;
@@ -25,6 +30,9 @@ public class StockSnapshot {
         this.weekHigh52           = weekHigh52;
         this.weekLow52            = weekLow52;
         this.freeCashFlowPerShare = freeCashFlowPerShare;
+        this.marketCap            = marketCap;
+        this.eps                  = eps;
+        this.revenueYoy           = revenueYoy;
         this.logo                 = logo;
     }
 
@@ -37,6 +45,9 @@ public class StockSnapshot {
     public double getWeekHigh52()            { return weekHigh52; }
     public double getWeekLow52()             { return weekLow52; }
     public double getFreeCashFlowPerShare()  { return freeCashFlowPerShare; }
+    public double getMarketCap()             { return marketCap; }
+    public double getEps()                   { return eps; }
+    public double getRevenueYoy()            { return revenueYoy; }
     public String getLogo()                  { return logo; }
 
     @Override

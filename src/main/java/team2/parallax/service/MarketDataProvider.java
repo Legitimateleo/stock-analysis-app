@@ -12,11 +12,15 @@ public interface MarketDataProvider {
 
     // ── Data fetching ─────────────────────────────────────────────
     StockSnapshot getSnapshot(Fortune500 stock);
+
     List<RecommendationTrends> getTrends(Fortune500 stock);
 
     // ── Calculations ──────────────────────────────────────────────
-    ValidationScore getValuation(Fortune500 stock, StockSnapshot snapshot);
+    ValidationScore getValuation();
 
     // ── Industry ──────────────────────────────────────────────────
     List<Fortune500> getByIndustry(Fortune500 stock);
+
+    // ── Extras ────────────────────────────────────────────────────
+    String getLogoUrl(String symbol);
 }

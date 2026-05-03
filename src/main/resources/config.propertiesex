@@ -1,4 +1,0 @@
-# Add your API keys here and change this file name to config.properties
-FINNHUB_API_KEY= yourKeyHere
-
-POLYGON_API_KEY= yourKeyHere
