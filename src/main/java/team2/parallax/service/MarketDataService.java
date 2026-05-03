@@ -174,7 +174,7 @@ public class MarketDataService implements MarketDataProvider {
         return count > 0 ? total / count : 0;
     }
 
-    public ValidationScore getValuation(Fortune500 stock, StockSnapshot snapshot) {
+    public ValidationScore getValuation() {
         return new ValidationScore( new CalculationMethods());
     }
 }

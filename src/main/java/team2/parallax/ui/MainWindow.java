@@ -1,5 +1,4 @@
 package team2.parallax.ui;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -12,22 +11,28 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import team2.parallax.api.FinnhubClient;
-import team2.parallax.api.ChartDataClient;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.model.StockSnapshot;
 import team2.parallax.service.MarketDataService;
 import team2.parallax.data.Fortune500;
 import team2.parallax.api.PolygonClient;
-
-import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
+import team2.parallax.api.ChartDataClient;
+import team2.parallax.service.MarketDataProvider;
+
 
 public class MainWindow extends Application implements ViewCallBack {
 
     private ParallaxController controller;
 
+    private static ChartDataClient injectedPolygonClient;
+    private static MarketDataProvider injectedMarketData;
+
+    public static void launch(ChartDataClient polygon, MarketDataProvider marketData) {
+        injectedPolygonClient = polygon;
+        injectedMarketData = marketData;
+        Application.launch(MainWindow.class);
+    }
     // UI components
     private ImageView logoView;
     private Label companyNameLabel;
@@ -58,19 +63,9 @@ public class MainWindow extends Application implements ViewCallBack {
 
     // API clients and controllers needed for the application.
     @Override
-    public void init() throws Exception {
-        Properties config = new Properties();
-        try (InputStream input = getClass()
-                .getClassLoader().getResourceAsStream("config.properties")) {
-            config.load(input);
-        }
-        String apiKey = config.getProperty("FINNHUB_API_KEY");
-        String polygonKey = config.getProperty("POLYGON_API_KEY", "").trim();
-        polygonClient = new PolygonClient(polygonKey);
-        stockChartPanel = new StockChartPanel(polygonClient);
-        FinnhubClient client = new FinnhubClient(apiKey);
-        MarketDataService marketData = new MarketDataService(client);
-        controller = new ParallaxController(marketData, this);
+    public void init() {
+        polygonClient = injectedPolygonClient;
+        controller = new ParallaxController(injectedMarketData, this);
     }
 
     // Sets up the main user interface layout and components.
@@ -479,14 +474,16 @@ public class MainWindow extends Application implements ViewCallBack {
         marketCapLabel.setText(mcStr);
         epsLabel.setText(String.format("$%.2f", snapshot.getEps()));
         revenueYoyLabel.setText(String.format("%.2f%%", snapshot.getRevenueYoy()));
+    }
 
-        relatedStocksPane.getChildren().clear();
-        List<Fortune500> allRelated = controller.getMarketData().getByIndustry(stock);
-        final List<Fortune500> relatedList = allRelated.size() > 16 ? allRelated.subList(0, 16) : allRelated;
-        for (Fortune500 related : relatedList) {
-            final String relatedName = related.name();
-            Label chip = new Label(relatedName);
-            chip.setStyle("""
+    @Override
+    public void onRelatedStocksLoaded(List<Fortune500> related) {
+        Platform.runLater(() -> {
+            relatedStocksPane.getChildren().clear();
+            for (Fortune500 r : related) {
+                final String ticker = r.name();
+                Label chip = new Label(ticker);
+                chip.setStyle("""
                     -fx-background-color: #2a2e39;
                     -fx-text-fill: white;
                     -fx-padding: 4px 10px;
@@ -495,39 +492,33 @@ public class MainWindow extends Application implements ViewCallBack {
                     -fx-font-size: 12px;
                     -fx-cursor: hand;
                     """);
-            chip.setOnMouseClicked(event -> {
-                searchField.setText(relatedName);
-                handleSearch();
-            });
-            relatedStocksPane.getChildren().add(chip);
-        }
+                chip.setOnMouseClicked(event -> {
+                    searchField.setText(ticker);
+                    handleSearch();
+                });
+                relatedStocksPane.getChildren().add(chip);
+            }
+        });
+    }
 
-        // Fetch logos sequentially in background to respect rate limits
-        new Thread(() -> {
-            for (int i = 0; i < relatedList.size(); i++) {
-                String relatedName = relatedList.get(i).name();
-                String logoUrl = controller.getMarketData().getLogoUrl(relatedName);
-                if (logoUrl != null && !logoUrl.equals("N/A") && !logoUrl.isEmpty()) {
+    @Override
+    public void onLogoFetched(int index, String relatedName, String logoUrl) {
+        if (logoUrl == null || logoUrl.equals("N/A") || logoUrl.isEmpty()) return;
+
+        Platform.runLater(() -> {
+            if (relatedStocksPane.getChildren().size() > index) {
+                javafx.scene.Node node = relatedStocksPane.getChildren().get(index);
+                if (node instanceof Label chip && chip.getText().equals(relatedName)) {
                     Image icon = new Image(logoUrl, true);
-                    final int index = i;
-                    Platform.runLater(() -> {
-                        // Ensure we are still showing the same related stocks (user didn't search
-                        // again)
-                        if (relatedStocksPane.getChildren().size() > index) {
-                            javafx.scene.Node node = relatedStocksPane.getChildren().get(index);
-                            if (node instanceof Label chip && chip.getText().equals(relatedName)) {
-                                ImageView chipIcon = new ImageView(icon);
-                                chipIcon.setFitWidth(16);
-                                chipIcon.setFitHeight(16);
-                                chipIcon.setPreserveRatio(true);
-                                chip.setGraphic(chipIcon);
-                                chip.setGraphicTextGap(6);
-                            }
-                        }
-                    });
+                    ImageView chipIcon = new ImageView(icon);
+                    chipIcon.setFitWidth(16);
+                    chipIcon.setFitHeight(16);
+                    chipIcon.setPreserveRatio(true);
+                    chip.setGraphic(chipIcon);
+                    chip.setGraphicTextGap(6);
                 }
             }
-        }).start();
+        });
     }
 
     // Creates a reusable UI

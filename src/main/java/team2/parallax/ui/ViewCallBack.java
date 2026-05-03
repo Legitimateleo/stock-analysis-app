@@ -20,4 +20,9 @@ public interface ViewCallBack {
     void onScoreCalculated(double score, String signal);
     void onScoreCalculatedFailure(String message);
     void onChartLoad(String ticker);
+
+    //Related Stocks and logo
+    void onRelatedStocksLoaded(List<Fortune500> related);
+    void onLogoFetched(int index, String relatedName, String logoUrl);
+
 }

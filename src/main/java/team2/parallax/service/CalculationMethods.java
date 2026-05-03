@@ -62,9 +62,9 @@ public class CalculationMethods {
             return 2.0;
     }
 
-    public double sectorPEScore(Fortune500 stock, StockSnapshot snapshot) {
+    public double sectorPEScore(String industry, StockSnapshot snapshot) {
         double stockPE = snapshot.getPeRatio();
-        double sectorPE = SectorPE.getAverageForIndustry(stock.getIndustry());
+        double sectorPE = SectorPE.getAverageForIndustry(industry);
 
         if (stockPE <= 0 || sectorPE <= 0)
             return 5.0;
