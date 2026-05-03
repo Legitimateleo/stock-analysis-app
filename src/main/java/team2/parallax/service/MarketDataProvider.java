@@ -15,9 +15,6 @@ public interface MarketDataProvider {
 
     List<RecommendationTrends> getTrends(Fortune500 stock);
 
-    // ── Calculations ──────────────────────────────────────────────
-    ValidationScore getValuation();
-
     // ── Industry ──────────────────────────────────────────────────
     List<Fortune500> getByIndustry(Fortune500 stock);
 

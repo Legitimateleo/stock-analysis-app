@@ -52,8 +52,8 @@ public class MarketDataService implements MarketDataProvider {
 
     public List<Fortune500> getByIndustry(Fortune500 stock) {
         List<Fortune500> related = new ArrayList<>();
-        for (Fortune500 s :  Fortune500.values()) {
-            if(s != stock && s.getIndustry().equals(stock.getIndustry())) {
+        for (Fortune500 s : Fortune500.values()) {
+            if (s != stock && s.getIndustry().equals(stock.getIndustry())) {
                 related.add(s);
             }
         }
@@ -63,16 +63,16 @@ public class MarketDataService implements MarketDataProvider {
     public List<RecommendationTrends> getTrends(Fortune500 stock) {
         List<RecommendationTrends> trends = new ArrayList<>();
         JsonArray trendsData = getRecommendationTrends(stock.name());
-        if(trendsData == null) return trends;
+        if (trendsData == null) return trends;
 
         for (JsonElement elem : trendsData) {
             JsonObject t = elem.getAsJsonObject();
             trends.add(new RecommendationTrends(
-                    t.has("buy")        ? t.get("buy").getAsInt()        : 0,
-                    t.has("hold")       ? t.get("hold").getAsInt()       : 0,
-                    t.has("period")     ? t.get("period").getAsString()  : "N/A",
-                    t.has("sell")       ? t.get("sell").getAsInt()       : 0,
-                    t.has("strongBuy")  ? t.get("strongBuy").getAsInt()  : 0,
+                    t.has("buy") ? t.get("buy").getAsInt() : 0,
+                    t.has("hold") ? t.get("hold").getAsInt() : 0,
+                    t.has("period") ? t.get("period").getAsString() : "N/A",
+                    t.has("sell") ? t.get("sell").getAsInt() : 0,
+                    t.has("strongBuy") ? t.get("strongBuy").getAsInt() : 0,
                     t.has("strongSell") ? t.get("strongSell").getAsInt() : 0
             ));
         }
@@ -87,8 +87,8 @@ public class MarketDataService implements MarketDataProvider {
         JsonObject quoteData = client.get("quote?symbol=" + symbol);
         double currentPrice = 0, change = 0, changePercent = 0;
         if (quoteData != null) {
-            currentPrice  = getDoubleOrZero(quoteData, "c");
-            change        = getDoubleOrZero(quoteData, "d");
+            currentPrice = getDoubleOrZero(quoteData, "c");
+            change = getDoubleOrZero(quoteData, "d");
             changePercent = getDoubleOrZero(quoteData, "dp");
         }
 
@@ -100,15 +100,15 @@ public class MarketDataService implements MarketDataProvider {
         if (metricsData != null) {
             JsonObject m = metricsData.getAsJsonObject("metric");
             if (m != null) {
-                peRatio              = getMetricValue(m, "peBasicExclExtraTTM");
-                priceToBook          = getMetricValue(m, "pbAnnual");
-                dividendYield        = getMetricValue(m, "currentDividendYieldTTM");
-                weekHigh52           = getMetricValue(m, "52WeekHigh");
-                weekLow52            = getMetricValue(m, "52WeekLow");
+                peRatio = getMetricValue(m, "peBasicExclExtraTTM");
+                priceToBook = getMetricValue(m, "pbAnnual");
+                dividendYield = getMetricValue(m, "currentDividendYieldTTM");
+                weekHigh52 = getMetricValue(m, "52WeekHigh");
+                weekLow52 = getMetricValue(m, "52WeekLow");
                 freeCashFlowPerShare = getMetricValue(m, "cashFlowPerShareTTM");
-                marketCap            = getMetricValue(m, "marketCapitalization");
-                eps                  = getMetricValue(m, "epsTTM");
-                revenueYoy           = getMetricValue(m, "revenueGrowthTTMYoy");
+                marketCap = getMetricValue(m, "marketCapitalization");
+                eps = getMetricValue(m, "epsTTM");
+                revenueYoy = getMetricValue(m, "revenueGrowthTTMYoy");
             }
         }
 
@@ -120,7 +120,7 @@ public class MarketDataService implements MarketDataProvider {
                 weekHigh52, weekLow52, freeCashFlowPerShare,
                 marketCap, eps, revenueYoy, logo);
     }
-    
+
     public String getLogoUrl(String symbol) {
         JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
         if (profileData != null && profileData.has("logo")
@@ -150,7 +150,7 @@ public class MarketDataService implements MarketDataProvider {
         return 0;
     }
 
-    public double getSectorAveragePE(Fortune500 stock){
+    public double getSectorAveragePE(Fortune500 stock) {
         List<Fortune500> peers = getByIndustry(stock);
 
         double total = 0;
@@ -164,7 +164,7 @@ public class MarketDataService implements MarketDataProvider {
             if (m == null) continue;
 
             double pe = getMetricValue(m, "peBasicExclExtraTTM");
-            if (pe >0) {
+            if (pe > 0) {
                 total += pe;
                 count++;
             }
@@ -172,10 +172,6 @@ public class MarketDataService implements MarketDataProvider {
         //returns total sum of PE in the sector and divides it by the number of companies within that sector
         //also ensures count is greater than 0.
         return count > 0 ? total / count : 0;
-    }
-
-    public ValidationScore getValuation() {
-        return new ValidationScore( new CalculationMethods());
     }
 }
 
