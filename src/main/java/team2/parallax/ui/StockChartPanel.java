@@ -20,7 +20,37 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-// Interactive candlestick/line chart panel that displays stock price data from Polygon API
+/**
+ * StockChartPanel is a self-contained JavaFX component that fetches, caches,
+ * and renders historical stock price data as an interactive line chart using
+ * the Polygon.io API.
+ *
+ * <p>This class extends {@link VBox} and manages its own complete subsystem —
+ * including data fetching via {@link ChartDataClient}, in-memory caching,
+ * background threading, Canvas-based rendering, and mouse interaction. It is
+ * intentionally designed as a self-contained component rather than routing
+ * data through {@code MarketDataService}, as the tight coupling between the
+ * caching strategy and the rendering logic made clean separation impractical
+ * without disproportionate complexity overhead.</p>
+ *
+ * <p>The chart supports seven timeframes: 1D, 5D, 1M, 3M, 6M, 1Y, and 2Y.
+ * Each timeframe fetches a padded date range from Polygon.io and subsets to
+ * the exact visible bar count after parsing. Results are cached per
+ * {@code "TICKER-TIMEFRAME"} key so subsequent timeframe switches return
+ * instantly without additional API calls.</p>
+ *
+ * <p>Intraday timeframes (1D, 5D) filter bars to US market hours only
+ * (9:30 AM – 4:00 PM Eastern). The line color is green when the period's
+ * last price is above the first price, and red when below.</p>
+ *
+ * <p>The panel depends on {@link ChartDataClient} rather than
+ * {@code PolygonClient} directly, maintaining the interface boundary
+ * between the UI and API layers.</p>
+ *
+ * @see ChartDataClient
+ * @see team2.parallax.ui.MainWindow
+ * @see team2.parallax.ui.ParallaxController
+ */
 public class StockChartPanel extends VBox {
 
     // chart plot stock

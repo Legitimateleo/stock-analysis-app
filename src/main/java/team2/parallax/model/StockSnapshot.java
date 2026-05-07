@@ -1,5 +1,25 @@
 package team2.parallax.model;
-
+/**
+ * StockSnapshot is an immutable Data Transfer Object (DTO) that carries
+ * all financial data retrieved from the Finnhub API for a single stock
+ * during a search operation.
+ *
+ * <p>An instance is created by {@code MarketDataService.getSnapshot()} after
+ * aggregating data from three Finnhub endpoints — {@code /quote},
+ * {@code /stock/metric}, and {@code /stock/profile2} — and is then passed
+ * upward through the controller to the UI layer for display. It is also
+ * retained by {@code ParallaxController} as {@code currentStockSnapshot}
+ * and passed to the valuation engine when the user clicks Calculate
+ * Valuation.</p>
+ *
+ * <p>All fields are declared {@code final} to enforce immutability.
+ * Once created, a snapshot represents a point-in-time view of the stock
+ * and is never modified. A new snapshot is created on each search.</p>
+ *
+ * @see team2.parallax.service.MarketDataService
+ * @see team2.parallax.service.CalculationMethods
+ * @see team2.parallax.ui.ParallaxController
+ */
 public class StockSnapshot {
     private final double currentPrice;
     private final double change;
@@ -49,10 +69,4 @@ public class StockSnapshot {
     public double getEps()                   { return eps; }
     public double getRevenueYoy()            { return revenueYoy; }
     public String getLogo()                  { return logo; }
-
-    @Override
-    public String toString() {
-        return String.format("StockSnapshot{price=%.2f, pe=%.2f, 52wHigh=%.2f, 52wLow=%.2f}",
-                currentPrice, peRatio, weekHigh52, weekLow52);
-    }
 }

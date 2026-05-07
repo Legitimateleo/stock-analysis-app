@@ -20,14 +20,64 @@ import java.util.List;
 import team2.parallax.api.ChartDataClient;
 import team2.parallax.service.MarketDataProvider;
 
-
+/**
+ * MainWindow is the primary View of the Parallax MVC architecture.
+ * It extends {@link Application} as the JavaFX application entry point and
+ * implements {@link ViewCallBack} as the communication contract with
+ * {@link ParallaxController}.
+ *
+ * <p>This class is responsible exclusively for display concerns — constructing
+ * and managing all JavaFX UI components, populating labels and panels with
+ * data received through {@link ViewCallBack} callbacks, and delegating all
+ * user-triggered actions to {@link ParallaxController}. It contains no
+ * business logic, no API calls, and no direct access to any service or
+ * data layer class.</p>
+ *
+ * <p>Because JavaFX requires {@link Application#launch(Class, String...)} to
+ * instantiate the view, dependency injection is achieved through static fields
+ * ({@link #injectedPolygonClient} and {@link #injectedMarketData}) set before
+ * launch via the static {@link #launch(ChartDataClient, MarketDataProvider)}
+ * method. These are consumed in {@link #init()} before the UI is constructed.</p>
+ *
+ * <p>The UI layout is a single scrollable dark-themed window that transitions
+ * from a centered search state to a full results dashboard after a successful
+ * stock search. All callbacks from {@link ParallaxController} are dispatched
+ * to the JavaFX Application Thread via {@link Platform#runLater(Runnable)}.</p>
+ *
+ * @see ViewCallBack
+ * @see ParallaxController
+ * @see StockChartPanel
+ * @see RecommendationTrendsChart
+ */
 public class MainWindow extends Application implements ViewCallBack {
-
+    /** The MVC controller that handles all user actions and service coordination. */
     private ParallaxController controller;
-
+    /**
+     * Static holder for the {@link ChartDataClient} injected before JavaFX launch.
+     * Required because JavaFX instantiates {@link Application} subclasses
+     * internally via reflection, preventing constructor-based dependency injection.
+     */
     private static ChartDataClient injectedPolygonClient;
+    /**
+     * Static holder for the {@link MarketDataProvider} injected before JavaFX launch.
+     * Consumed by {@link #init()} to wire the controller.
+     */
     private static MarketDataProvider injectedMarketData;
 
+    /**
+     * Static entry point for launching the JavaFX application with injected
+     * dependencies. Sets the static polygon client and market data provider
+     * fields before delegating to {@link Application#launch(Class, String...)}.
+     *
+     * <p>This method exists because JavaFX instantiates {@link Application}
+     * subclasses internally and does not support constructor injection.
+     * Dependencies are stored as static fields and consumed in {@link #init()}.</p>
+     *
+     * @param polygon    the {@link ChartDataClient} implementation to use for
+     *                   Polygon.io chart data requests.
+     * @param marketData the {@link MarketDataProvider} implementation to pass
+     *                   to {@link ParallaxController}.
+     */
     public static void launch(ChartDataClient polygon, MarketDataProvider marketData) {
         injectedPolygonClient = polygon;
         injectedMarketData = marketData;
@@ -61,14 +111,24 @@ public class MainWindow extends Application implements ViewCallBack {
     private ChartDataClient polygonClient;
     private StockChartPanel stockChartPanel;
 
-    // API clients and controllers needed for the application.
+    /**
+     * JavaFX lifecycle method called before {@link #start(Stage)}.
+     * Consumes the statically injected dependencies to initialize the
+     * polygon client and wire the {@link ParallaxController}.
+     */
     @Override
     public void init() {
         polygonClient = injectedPolygonClient;
         controller = new ParallaxController(injectedMarketData, this);
     }
 
-    // Sets up the main user interface layout and components.
+    /**
+     * JavaFX lifecycle method that constructs and displays the main application
+     * window. Builds all UI components, assembles the layout hierarchy, wires
+     * event handlers, and shows the stage.
+     *
+     * @param stage the primary {@link Stage} provided by the JavaFX runtime.
+     */
     @Override
     public void start(Stage stage) {
         VBox root = new VBox(20);
@@ -331,7 +391,11 @@ public class MainWindow extends Application implements ViewCallBack {
         stage.show();
     }
 
-    // Handles the user's search request and resets the current UI state.
+    /**
+     * Handles a search action triggered by the Search button or Enter key.
+     * Validates input length, resets all results panel state, and delegates
+     * to {@link ParallaxController#handleSearch(String)}.
+     */
     private void handleSearch() {
         errorLabel.setVisible(false);
         resultsPanel.setVisible(false);
@@ -357,7 +421,14 @@ public class MainWindow extends Application implements ViewCallBack {
         controller.handleSearch(searchField.getText());
     }
 
-    // Callback when a stock search operation completes successfully.
+    /**
+     * Called when a search completes successfully. Populates the results panel
+     * with stock and snapshot data, triggers chart load through the controller,
+     * and makes the results panel and action buttons visible.
+     *
+     * @param stock    the matched {@link Fortune500} enum constant.
+     * @param snapshot the {@link StockSnapshot} containing fetched market data.
+     */
     @Override
     public void onSearchSuccess(Fortune500 stock, StockSnapshot snapshot) {
         Platform.runLater(() -> {
@@ -370,6 +441,12 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called when a search fails. Displays the error message and clears
+     * the search field.
+     *
+     * @param message the error message to display to the user.
+     */
     @Override
     public void onSearchFailure(String message) {
         Platform.runLater(() -> {
@@ -380,6 +457,13 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called when analyst recommendation trends finish loading. Builds and
+     * inserts the {@link RecommendationTrendsChart} into the results panel
+     * at the placeholder position.
+     *
+     * @param trends the list of {@link RecommendationTrends} objects to display.
+     */
     @Override
     public void onTrendsLoaded(List<RecommendationTrends> trends) {
         Platform.runLater(() -> {
@@ -397,6 +481,11 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called when the trends fetch fails. Displays the error message.
+     *
+     * @param message the error message to display to the user.
+     */
     @Override
     public void onTrendsLoadFailure(String message) {
         Platform.runLater(() -> {
@@ -405,6 +494,14 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called when the valuation score is computed. Displays the numeric score
+     * and a color-coded signal label using the Parallax buy/sell color scheme:
+     * green for buy signals, yellow for hold, red for sell signals.
+     *
+     * @param score  the composite valuation score between 1.0 and 10.0.
+     * @param signal the signal string: STRONG BUY, BUY, HOLD, SELL, or STRONG SELL.
+     */
     @Override
     public void onScoreCalculated(double score, String signal) {
         Platform.runLater(() -> {
@@ -424,6 +521,11 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called when the valuation calculation fails. Displays the error message.
+     *
+     * @param message the error message to display to the user.
+     */
     @Override
     public void onScoreCalculatedFailure(String message) {
         Platform.runLater(() -> {
@@ -432,12 +534,29 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
+    /**
+     * Called by the controller to trigger a chart load for the given ticker.
+     * Delegates directly to {@link StockChartPanel#load(String)}.
+     *
+     * @param ticker the stock ticker symbol to load the chart for.
+     */
     @Override
     public void onChartLoad(String ticker) {
         stockChartPanel.load(ticker);
     }
 
-    // Updates the UI components with fetched stock and snapshot data.
+    /**
+     * Populates all results panel components with data from the given
+     * stock and snapshot. Called by {@link #onSearchSuccess(Fortune500, StockSnapshot)}.
+     * Price labels are initialized from the Finnhub snapshot here but will be
+     * overwritten by the {@link StockChartPanel} timeframe listener when Polygon
+     * data loads, providing a more accurate real-time price.
+     *
+     * @param stock    the matched {@link Fortune500} enum constant providing
+     *                 company name, ticker, and industry.
+     * @param snapshot the {@link StockSnapshot} providing all financial metrics
+     *                 and the company logo URL.
+     */
     private void populateResults(Fortune500 stock, StockSnapshot snapshot) {
 
         companyNameLabel.setText(stock.getCompanyName());
@@ -521,7 +640,19 @@ public class MainWindow extends Application implements ViewCallBack {
         });
     }
 
-    // Creates a reusable UI
+    /**
+     * Creates a reusable metric display box consisting of a gray label and a
+     * bold white value label stacked vertically. Attaches a hover tooltip with
+     * a plain-English description of the metric if one is defined in
+     * {@link #getMetricDescription(String)}.
+     *
+     * @param labelText  the metric name displayed above the value
+     *                   (e.g. {@code "P/E Ratio"}).
+     * @param valueLabel the {@link Label} that will be populated with the
+     *                   metric value after a search completes.
+     * @return a styled {@link VBox} containing the label and value label,
+     *         with tooltip and hover highlight if a description is available.
+     */
     private VBox metricBox(String labelText, Label valueLabel) {
         Label label = new Label(labelText);
         label.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 12px;");
@@ -558,7 +689,16 @@ public class MainWindow extends Application implements ViewCallBack {
         return box;
     }
 
-    // hard code text descriptions
+    /**
+     * Returns a plain-English description for the given metric name, used
+     * as tooltip text on each metric box in the results panel. Returns
+     * {@code null} for unrecognized metric names, which suppresses the tooltip.
+     *
+     * @param metric the metric display name to look up
+     *               (e.g. {@code "P/E Ratio"}, {@code "Market Cap"}).
+     * @return a tooltip description string, or {@code null} if no description
+     *         is defined for the given metric name.
+     */
     private String getMetricDescription(String metric) {
         return switch (metric) {
             case "P/E Ratio" ->

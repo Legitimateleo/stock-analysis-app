@@ -1,5 +1,32 @@
 package team2.parallax.data;
 
+/**
+ * SectorPE is an enumeration of industry sectors and their pre-calculated
+ * average Price-to-Earnings (P/E) ratios, used by the Parallax valuation
+ * engine to contextualize a stock's P/E ratio relative to its industry peers.
+ *
+ * <p>Each constant represents one industry classification and stores the
+ * average P/E ratio for that sector, calculated from live Finnhub data
+ * using the {@code SectorPECalculator} utility class at the time of
+ * generation. The industry name string must exactly match the industry
+ * strings stored in the {@link Fortune500} enum for the lookup in
+ * {@link #getAverageForIndustry(String)} to succeed.</p>
+ *
+ * <p>This enum eliminates the need for any API call during the valuation
+ * calculation. Rather than fetching sector averages at runtime, the
+ * pre-calculated values are embedded directly in the enum and accessed
+ * in O(1) time via the {@link #getAverageForIndustry(String)} lookup.
+ * This is a deliberate performance and architectural decision — the
+ * sector P/E scoring method requires zero network activity.</p>
+ *
+ * <p>These values should be regenerated periodically using the
+ * {@code SectorPECalculator} utility when market conditions shift
+ * significantly, as sector average P/E ratios change over time.</p>
+ *
+ * @see Fortune500
+ * @see team2.parallax.service.CalculationMethods
+ */
+
 public enum SectorPE {
 
     BUILDING("Building", 22.71),
@@ -43,22 +70,51 @@ public enum SectorPE {
     COMMERCIAL_SERVICES_AND_SUPPLIES("Commercial Services & Supplies", 29.57),
     PHARMACEUTICALS("Pharmaceuticals", 22.15);
 
+    /**
+     * The display name of the industry sector as it appears in the
+     * {@link Fortune500} enum's industry field. Must match exactly
+     * (case-insensitive) for {@link #getAverageForIndustry(String)}
+     * to return a valid result.
+     */
     private final String industryName;
+    /**
+     * The pre-calculated average trailing P/E ratio for this industry sector.
+     * Used by {@code CalculationMethods.sectorPEScore()} to compute the
+     * ratio of a stock's P/E relative to its industry average, producing
+     * a score between 1 and 10.
+     */
     private final double averagePE;
 
+    /**
+     * Constructs a SectorPE enum constant with the given industry name
+     * and pre-calculated average P/E ratio.
+     *
+     * @param industryName the industry display name matching the corresponding
+     *                     industry string in {@link Fortune500}
+     *                     (e.g. "Semiconductors", "Banking").
+     * @param averagePE    the pre-calculated average trailing P/E ratio
+     *                     for this industry sector.
+     */
     SectorPE(String industryName, double averagePE) {
         this.industryName = industryName;
         this.averagePE = averagePE;
     }
 
-    public String getIndustryName() {
-        return industryName;
-    }
-
-    public double getAveragePE() {
-        return averagePE;
-    }
-
+    /**
+     * Looks up and returns the average P/E ratio for the given industry name
+     * by iterating all {@code SectorPE} constants and performing a
+     * case-insensitive string comparison against each constant's
+     * {@code industryName} field.
+     *
+     * <p>This method is called by {@code CalculationMethods.sectorPEScore()}
+     * with the industry string retrieved from {@link Fortune500#getIndustry()}.</p>
+     *
+     * @param industry the industry classification string to look up,
+     *                 sourced from {@link Fortune500#getIndustry()}.
+     *                 Comparison is case-insensitive.
+     * @return the average P/E ratio for the matching sector as a double,
+     *         or {@code 0.0} if no matching sector is found.
+     */
     public static double getAverageForIndustry(String industry) {
         for (SectorPE sector : values()) {
             if (sector.industryName.equalsIgnoreCase(industry)) {

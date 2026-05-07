@@ -1,5 +1,26 @@
 package team2.parallax.model;
 
+/**
+ * RecommendationTrends is an immutable Data Transfer Object (DTO) that
+ * carries one month of analyst recommendation consensus data retrieved
+ * from the Finnhub {@code /stock/recommendation} endpoint.
+ *
+ * <p>Each instance represents a single monthly data point containing the
+ * aggregate count of analyst recommendations across five sentiment
+ * categories: Strong Buy, Buy, Hold, Sell, and Strong Sell. A list of
+ * these objects — typically covering the four most recent months — is
+ * returned by {@code MarketDataService.getTrends()} and passed to
+ * {@code RecommendationTrendsChart.build()} to render the stacked bar
+ * chart in the UI.</p>
+ *
+ * <p>All fields are declared {@code final} to enforce immutability.
+ * Each instance represents a fixed point-in-time snapshot of analyst
+ * consensus and is never modified after construction.</p>
+ *
+ * @see team2.parallax.service.MarketDataService
+ * @see team2.parallax.ui.RecommendationTrendsChart
+ */
+
 public class RecommendationTrends {
     private final int buy;
     private final int hold;
@@ -26,10 +47,4 @@ public class RecommendationTrends {
     public int getStrongBuy()    { return strongBuy; }
     public int getStrongSell()     { return strongSell; }
 
-
-    @Override
-    public String toString() {
-        return String.format("RecommendationTrends{period=%s, strongBuy=%d, buy=%d, hold=%d, sell=%d, strongSell=%d}",
-                period, strongBuy, buy, hold, sell, strongSell);
-    }
 }
