@@ -21,10 +21,6 @@ public class MarketDataService implements MarketDataProvider {
         this.client = client;
     }
 
-    public JsonObject getFinancialMetrics(String symbol) {
-        return client.get("stock/metric?symbol=" + symbol);
-    }
-
     public JsonArray getRecommendationTrends(String symbol) {
         String raw = client.getRaw("stock/recommendation?symbol=" + symbol);
         if (raw == null) return null;
@@ -83,7 +79,7 @@ public class MarketDataService implements MarketDataProvider {
     public StockSnapshot getSnapshot(Fortune500 stock) {
         String symbol = stock.name();
 
-        // ── 1 call: Quote ─────────────────────────────────────────────
+
         JsonObject quoteData = client.get("quote?symbol=" + symbol);
         double currentPrice = 0, change = 0, changePercent = 0;
         if (quoteData != null) {
@@ -92,7 +88,6 @@ public class MarketDataService implements MarketDataProvider {
             changePercent = getDoubleOrZero(quoteData, "dp");
         }
 
-        // ── 2 call: Metrics ───────────────────────────────────────────
         JsonObject metricsData = client.get("stock/metric?symbol=" + symbol + "&metric=all");
         double peRatio = 0, priceToBook = 0, dividendYield = 0,
                 weekHigh52 = 0, weekLow52 = 0, freeCashFlowPerShare = 0;
@@ -112,7 +107,7 @@ public class MarketDataService implements MarketDataProvider {
             }
         }
 
-        // ── 3 call: Logo only ─────────────────────────────────────────
+        //call logo for summary
         String logo = getLogoUrl(symbol);
 
         return new StockSnapshot(currentPrice, change, changePercent,
@@ -121,6 +116,7 @@ public class MarketDataService implements MarketDataProvider {
                 marketCap, eps, revenueYoy, logo);
     }
 
+    //call logo for related stocks
     public String getLogoUrl(String symbol) {
         JsonObject profileData = client.get("stock/profile2?symbol=" + symbol);
         if (profileData != null && profileData.has("logo")
@@ -130,6 +126,7 @@ public class MarketDataService implements MarketDataProvider {
         return "N/A";
     }
 
+    //
     public StockSnapshot lookup(String input) {
         Fortune500 stock = search(input);
         if (stock == null) return null;
@@ -148,30 +145,6 @@ public class MarketDataService implements MarketDataProvider {
             return metrics.get(key).getAsDouble();
         }
         return 0;
-    }
-
-    public double getSectorAveragePE(Fortune500 stock) {
-        List<Fortune500> peers = getByIndustry(stock);
-
-        double total = 0;
-        int count = 0;
-
-        for (Fortune500 peer : peers) {
-            JsonObject metrics = getFinancialMetrics(peer.name());
-            if (metrics == null) continue;
-
-            JsonObject m = metrics.getAsJsonObject("metric");
-            if (m == null) continue;
-
-            double pe = getMetricValue(m, "peBasicExclExtraTTM");
-            if (pe > 0) {
-                total += pe;
-                count++;
-            }
-        }
-        //returns total sum of PE in the sector and divides it by the number of companies within that sector
-        //also ensures count is greater than 0.
-        return count > 0 ? total / count : 0;
     }
 }
 

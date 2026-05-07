@@ -41,16 +41,4 @@ public class ValidationScore {
         else                   return "STRONG SELL";
 
     }
-
-    // ── Full summary ──────────────────────────────────────────────
-    public void printSummary(String industry, StockSnapshot snapshot) {
-        System.out.println("\n── Valuation Score Summary ──────────────");
-        System.out.printf("P/E Score:        %.2f%n", getPEScore(snapshot));
-        System.out.printf("High/Low Score:   %.2f%n", getHighLowScore(snapshot));
-        System.out.printf("Sector P/E Score: %.2f%n", getSectorPEScore( industry,snapshot));
-        System.out.println("─────────────────────────────────────────");
-        System.out.printf("Final Score:      %.2f / 10%n", getFinalScore( industry,snapshot));
-        System.out.println("Signal:           " + getSignal( industry,snapshot));
-        System.out.println("─────────────────────────────────────────");
-    }
 }
