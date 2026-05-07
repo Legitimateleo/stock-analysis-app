@@ -17,19 +17,7 @@ public interface ChartDataClient {
      */
     JsonObject getAggregates(String ticker, int multiplier, String timespan,
                              String from, String to, int limit);
-    /**
-     * Fetch quarterly financial data for a given ticker.
-     *
-     * @param ticker e.g. "AAPL"
-     * @return parsed JsonObject with results array or null on error
-     */
-    JsonObject getFinancials(String ticker);
 
-    /**
-     * Check if a valid API key is present.
-     *
-     * @return true if key exists and is not blank
-     */
     boolean hasKey();
 }
 

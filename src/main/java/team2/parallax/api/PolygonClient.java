@@ -102,57 +102,6 @@ public class PolygonClient implements ChartDataClient {
         }
         return null;
     }
-
-    /**
-     * Fetch quarterly financial data (income statement) from Polygon's
-     * experimental financials endpoint.
-     *
-     * @param ticker e.g. "AAPL"
-     * @return parsed JsonObject with "results" array, or null on error
-     */
-    public JsonObject getFinancials(String ticker) {
-        long now = System.currentTimeMillis();
-        long elapsed = now - lastRequestTime;
-        if (elapsed < MIN_DELAY_MS) {
-            try {
-                Thread.sleep(MIN_DELAY_MS - elapsed);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        lastRequestTime = System.currentTimeMillis();
-
-        String url = String.format(
-                "%s/vX/reference/financials?ticker=%s&timeframe=quarterly&limit=6&sort=period_of_report_date&order=desc&apiKey=%s",
-                BASE_URL, ticker, apiKey);
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Accept", "application/json")
-                    .GET()
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            int status = response.statusCode();
-            if (status == 200) {
-                return gson.fromJson(response.body(), JsonObject.class);
-            } else if (status == 403) {
-                System.out.println("POLYGON FINANCIALS FORBIDDEN – requires Stocks Advanced plan");
-            } else if (status == 429) {
-                System.out.println("POLYGON FINANCIALS RATE LIMITED");
-            } else {
-                System.out.println("POLYGON FINANCIALS HTTP " + status + ": " + response.body());
-            }
-        } catch (IOException e) {
-            System.out.println("POLYGON FINANCIALS Connection Error: " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        return null;
-    }
-
     public boolean hasKey() {
         return apiKey != null && !apiKey.isBlank();
     }
