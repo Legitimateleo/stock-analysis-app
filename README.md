@@ -133,17 +133,28 @@ Or run `team2.parallax.FinnhubMain` directly from your IDE.
 
 ## Download
 
-### macOS Installation
+### macOS
+> Requires macOS 12 or later. No Java installation needed.
+
+[![Download macOS](https://img.shields.io/badge/Download-macOS-black?style=for-the-badge&logo=apple)](https://github.com/Legitimateleo/stock-analysis-app/releases/download/v1.0/Parallax_MacOs.zip)
 
 1. Download and extract `Parallax_MacOs.zip`
 2. Open Terminal and run:
 
+```bash
 sudo chmod -R 755 /path/to/Parallax_MacOs.app
 sudo xattr -cr /path/to/Parallax_MacOs.app
+```
 
 3. Then open:
 
+```bash
 open /path/to/Parallax_MacOs.app
+```
+
+> Replace `/path/to/` with the folder where you extracted the app.
+> For example: `~/Downloads/Parallax_MacOs.app`
+
 
 ### Windows
 > Requires Windows 10 or later. No Java installation needed — runtime is bundled.
