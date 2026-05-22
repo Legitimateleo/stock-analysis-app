@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/parallax_logo.png" alt="Parallax Logo" width="120"/>
+<img src="src/docs/parallax_logo.png" alt="Parallax Logo" width="120"/>
 
 # Parallax — Market Intelligence
 
