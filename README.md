@@ -134,25 +134,22 @@ Or run `team2.parallax.FinnhubMain` directly from your IDE.
 ## Download
 
 ### macOS
-
 > Requires macOS 12 or later. No Java installation needed.
 
-1. Download `Parallax_MacOs.zip` from the [Releases](https://github.com/Legitimateleo/stock-analysis-app/releases) page
-2. Extract and double-click `Parallax_MacOs.app`
-3. If blocked by Gatekeeper:
+[![Download macOS](https://img.shields.io/badge/Download-macOS-black?style=for-the-badge&logo=apple)](https://github.com/Legitimateleo/stock-analysis-app/releases/download/v1.0/Parallax_MacOs.zip)
+
+1. Extract and double-click `Parallax_MacOs.app`
+2. If blocked by Gatekeeper:
    - Go to **System Settings → Privacy & Security**
    - Click **Open Anyway**
-   - Or right-click the app → **Open** → **Open**
 
 ### Windows
-
 > Requires Windows 10 or later. No Java installation needed — runtime is bundled.
 
-1. Download `Parallax_Windows.zip` from the [Releases](https://github.com/Legitimateleo/stock-analysis-app/releases) page
-2. Extract the entire zip — **do not move** `Parallax.exe` out of the folder
-3. Double-click `Parallax.exe`
+[![Download Windows](https://img.shields.io/badge/Download-Windows-blue?style=for-the-badge&logo=windows)](https://github.com/Legitimateleo/stock-analysis-app/releases/download/v1.0/Parallax_Windows.zip)
 
----
+1. Extract the entire zip — **do not move** `Parallax.exe` out of the folder
+2. Double-click `Parallax.exe`
 
 ## API Rate Limits
 
