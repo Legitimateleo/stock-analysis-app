@@ -11,7 +11,6 @@
 [![Maven](https://img.shields.io/badge/Maven-3.x-red?style=flat-square&logo=apachemaven)](https://maven.apache.org/)
 [![Finnhub](https://img.shields.io/badge/API-Finnhub-green?style=flat-square)](https://finnhub.io/)
 [![Polygon](https://img.shields.io/badge/API-Polygon.io-purple?style=flat-square)](https://polygon.io/)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
 
 [📹 Watch the Demo on LinkedIn](https://www.linkedin.com/in/leonardo-solorzano) · [⬇️ Download for macOS](#download) · [🚀 Build from Source](#build-from-source)
 
