@@ -35,3 +35,7 @@ backend/.env
 frontend/__pycache__/
 frontend/**/__pycache__/
 frontend/.env
+
+# Docker Compose reads this at the project root — contains real API keys
+.env
+!.env.example
