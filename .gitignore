@@ -31,3 +31,4 @@ replay_pid*
 src/main/resources/config.properties
 backend/target/
 backend/.env
+.DS_Store
