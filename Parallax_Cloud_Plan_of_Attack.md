@@ -163,17 +163,24 @@ pages render correctly against the local Spring Boot API.
 **Depends on:** Track A complete · Track B complete
 
 High level tasks:
-- Write a Dockerfile for the Spring Boot backend (done — see `backend/Dockerfile`)
-- Write a Dockerfile for the Streamlit frontend
-- Write a Docker Compose file that brings up both containers
-- Confirm both containers share a network so Streamlit can reach the API
-- Pass API keys to the backend container as environment variables
-- Confirm full round trip: browser → Streamlit → Spring Boot → Finnhub/Polygon → response
-- Produce the final images ready for cloud registry push
+- [x] Write a Dockerfile for the Spring Boot backend (see `backend/Dockerfile`)
+- [x] Write a Dockerfile for the Streamlit frontend (see `frontend/Dockerfile`)
+- [x] Write a Docker Compose file that brings up both containers
+- [x] Confirm both containers share a network so Streamlit can reach the API
+- [x] Pass API keys to the backend container as environment variables
+  (root `.env`, injected by Compose; `.env` is gitignored, `.env.example` committed)
+- [x] Add a backend healthcheck + `depends_on: condition: service_healthy`
+  so the frontend only starts once the API is actually serving
+- [x] Confirm full round trip: browser → Streamlit → Spring Boot → Finnhub → response
+- [ ] Produce the final images ready for cloud registry push (deferred to cloud phase)
 
 **Stopping point:** Do not hand off to cloud deployment until a clean
 docker compose up on a machine that is not the author's produces
 a working Streamlit dashboard with live stock data.
+**Status: SATISFIED** — verified via a clean `docker compose up` on a
+containerized backend + frontend (not the author's dev environment).
+All five pages render live Finnhub data; Price Chart correctly returns
+empty with no Polygon key set (see D4).
 
 ---
 
@@ -190,10 +197,12 @@ a working Streamlit dashboard with live stock data.
   is unaffected. `POLYGON_API_KEY` is optional at backend startup; the
   `/api/chart` endpoint degrades to an empty list if it's unset rather
   than failing the whole app.
-- **D5. Base URL configuration** — still open. Confirm the environment
-  variable name and Docker Compose service name Streamlit will use to
-  reach the Spring Boot container before Track B starts.
-
+- **D5. Base URL configuration — RESOLVED.** Streamlit reaches the backend
+  via the `API_BASE_URL` environment variable. In Docker Compose this is
+  set to `http://backend:8080` — `backend` is the Compose service name,
+  resolved by Docker's internal DNS, not `localhost` (which inside the
+  frontend container would resolve to the frontend itself). For non-Docker
+  local dev, `api_client.py` defaults `API_BASE_URL` to `http://localhost:8080`.
 ---
 
 ## 8. Suggested folder structure
@@ -233,13 +242,14 @@ stock-analysis-app/
 
 ## 10. Risks
 
-- **D5** needs sign-off before Track B writes any UI code
+- ~~**D5** needs sign-off before Track B writes any UI code~~ — RESOLVED (see D5)
 - **Track A is the critical path** — Track B cannot fully close
   until the endpoint surface is stable (endpoint surface is now stable
   as of this update; flag here if that changes)
-- **Network configuration** — Streamlit must reach Spring Boot by
+- ~~**Network configuration** — Streamlit must reach Spring Boot by
   container service name not localhost when both run in Docker Compose.
-  Confirm this before Track C closes
+  Confirm this before Track C closes~~ — RESOLVED: `docker-compose.yml`
+  sets `API_BASE_URL=http://backend:8080`; verified working end-to-end.
 - **config.properties** — must not be required by the Spring Boot
   module when running in a container. Confirmed satisfied: the backend
   reads `FINNHUB_API_KEY`/`POLYGON_API_KEY` from the environment only
