@@ -29,3 +29,5 @@ replay_pid*
 .idea/
 #key protection
 src/main/resources/config.properties
+backend/target/
+backend/.env
