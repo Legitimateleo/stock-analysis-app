@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import team2.parallax.model.RecommendationTrends;
 import team2.parallax.data.Fortune500;
 import team2.parallax.model.StockSnapshot;
+import team2.parallax.model.ValuationResult;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.JsonElement;
@@ -50,6 +51,14 @@ public class MarketDataService implements MarketDataProvider {
      * concrete {@code FinnhubClient} to enforce the DAO layer boundary.
      */
     private final Gson gson = new Gson();
+
+    /**
+     * The valuation scoring engine, composed internally so callers never
+     * need to construct {@link CalculationMethods}/{@link ValidationScore}
+     * themselves. Stateless and safe to reuse across every call.
+     */
+    private final ValidationScore validationScore = new ValidationScore(new CalculationMethods());
+
     /**
      * Constructs a new MarketDataService with the provided data access client.
      *
@@ -271,6 +280,29 @@ public class MarketDataService implements MarketDataProvider {
                 peRatio, priceToBook, dividendYield,
                 weekHigh52, weekLow52, freeCashFlowPerShare,
                 marketCap, eps, revenueYoy, logo);
+    }
+
+    /**
+     * Computes and returns the composite valuation score and buy/sell signal
+     * for the given stock using its already-fetched {@link StockSnapshot}.
+     *
+     * <p>Delegates to {@link ValidationScore#getFinalScore(String, StockSnapshot)}
+     * and {@link ValidationScore#getSignal(String, StockSnapshot)}, both keyed
+     * off {@code stock.getIndustry()}. No new API calls are made — the snapshot
+     * must already have been retrieved via {@link #getSnapshot(Fortune500)}.</p>
+     *
+     * @param stock    the {@link Fortune500} stock being valued; supplies the
+     *                 industry classification used for sector-relative scoring.
+     * @param snapshot the previously fetched {@link StockSnapshot} for this stock.
+     * @return a {@link ValuationResult} containing the composite score
+     *         (1.0–10.0) and the corresponding signal label.
+     */
+    @Override
+    public ValuationResult getValuation(Fortune500 stock, StockSnapshot snapshot) {
+        String industry = stock.getIndustry();
+        double score = validationScore.getFinalScore(industry, snapshot);
+        String signal = validationScore.getSignal(industry, snapshot);
+        return new ValuationResult(score, signal);
     }
 
     /**
