@@ -1,7 +1,7 @@
 # Parallax — New Contributor Setup Guide
 
 **Repo:** `https://github.com/Legitimateleo/stock-analysis-app`
-**Branch:** `feature/cloud-backend`
+**Branch:** `main` (Track A/B merged; Track C on `track-c/docker-compose`)
 **Last updated:** July 2026
 
 ---
@@ -17,7 +17,7 @@ The cloud deployment adds:
 ```
 Spring Boot REST API   ← Java backend exposing MarketDataService + ChartDataService
 Streamlit Dashboard    ← Python frontend consuming the REST API
-Docker Compose         ← wires both containers together (Track C, not built yet)
+Docker Compose         ← wires both containers together (Track C — done)
 Cloud                  ← deployed to AWS, Azure, and GCP (not started yet)
 ```
 
@@ -34,7 +34,7 @@ Confirm you have the following installed before cloning:
 | JDK | 21 or later | https://adoptium.net |
 | Maven | 3.x | https://maven.apache.org |
 | Python | 3.10 or later | https://python.org |
-| Docker Desktop | Latest (needed once Track C exists) | https://www.docker.com/products/docker-desktop |
+| Docker Desktop | Latest — used to run the whole stack (Track C) | https://www.docker.com/products/docker-desktop |
 | Git | Any | https://git-scm.com |
 
 ---
@@ -44,8 +44,39 @@ Confirm you have the following installed before cloning:
 ```bash
 git clone https://github.com/Legitimateleo/stock-analysis-app.git
 cd stock-analysis-app
-git checkout feature/cloud-backend
 ```
+
+---
+
+## Step 1.5 — Run the whole stack with Docker (recommended)
+
+If you have Docker Desktop running, this is the fastest path — no JDK,
+Maven, or Python needed on your machine. The backend compiles inside its
+own container.
+
+Copy the environment template and add your Finnhub key:
+
+```bash
+cp .env.example .env
+# then edit .env and set FINNHUB_API_KEY=your_real_key
+# POLYGON_API_KEY can stay blank — the Price Chart page will just be empty
+```
+
+Bring both containers up:
+
+```bash
+docker compose up --build
+```
+
+Wait for the backend to report healthy (the frontend is gated on it and
+starts second), then open http://localhost:8501 and search a ticker.
+
+Stop the stack with Ctrl+C, then `docker compose down`.
+
+`.env` is gitignored — never commit it. Only `.env.example` is tracked.
+
+The rest of this guide (Steps 2–4) is the manual, non-Docker path — useful
+for backend or frontend development in isolation.
 
 ---
 
@@ -200,7 +231,7 @@ is next.
 
 ```bash
 git fetch origin
-git pull origin feature/cloud-backend
+git pull origin main
 ```
 
 Run this at the start of every working session.
@@ -217,8 +248,8 @@ Run this at the start of every working session.
 ✅ New backend code goes in backend/ folder
 ✅ New frontend code goes in frontend/ folder
 ✅ Run mvn clean install (desktop) and mvn compile (backend/) before opening a PR
-✅ Streamlit must call the API by Docker Compose service name, not localhost,
-   once Track C exists — see API_BASE_URL in frontend/.env.example
+✅ Streamlit calls the API by the Compose service name (backend), not localhost,
+   set via API_BASE_URL in docker-compose.yml
 ```
 
 ---
@@ -234,5 +265,5 @@ src/main/java/team2/parallax/api/FinnhubClient.java
 src/main/java/team2/parallax/data/Fortune500.java
 pom.xml
 backend/pom.xml
-docker-compose.yml (once it exists)
+docker-compose.yml
 ```
