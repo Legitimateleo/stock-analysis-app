@@ -32,3 +32,6 @@ src/main/resources/config.properties
 backend/target/
 backend/.env
 .DS_Store
+frontend/__pycache__/
+frontend/**/__pycache__/
+frontend/.env
