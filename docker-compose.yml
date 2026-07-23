@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: parallax-backend:latest
+    container_name: parallax-backend
+    environment:
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:?FINNHUB_API_KEY is not set - copy .env.example to .env}
+      POLYGON_API_KEY: ${POLYGON_API_KEY:-}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8501}
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - parallax
+
+  frontend:
+    build:
+      context: ./frontend
+    image: parallax-frontend:latest
+    container_name: parallax-frontend
+    environment:
+      API_BASE_URL: http://backend:8080
+    ports:
+      - "8501:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - parallax
+
+networks:
+  parallax:
+    driver: bridge
