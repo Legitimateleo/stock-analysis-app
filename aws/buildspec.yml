@@ -1,0 +1,46 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
+      - BACKEND_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_ECR_REPO
+      - FRONTEND_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_ECR_REPO
+
+  build:
+    commands:
+      - echo "Building backend image..."
+      - docker build -t $BACKEND_URI:$IMAGE_TAG -t $BACKEND_URI:latest ./backend
+      - echo "Building frontend image..."
+      - docker build -t $FRONTEND_URI:$IMAGE_TAG -t $FRONTEND_URI:latest ./frontend
+
+  post_build:
+    commands:
+      - echo "Pushing backend image..."
+      - docker push $BACKEND_URI:$IMAGE_TAG
+      - docker push $BACKEND_URI:latest
+      - echo "Pushing frontend image..."
+      - docker push $FRONTEND_URI:$IMAGE_TAG
+      - docker push $FRONTEND_URI:latest
+
+      # imagedefinitions.json is the format CodePipeline's native
+      # "Amazon ECS" deploy action expects — container name must match
+      # the "name" field in each ECS task definition exactly.
+      - mkdir -p backend_artifact frontend_artifact
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$BACKEND_URI:$IMAGE_TAG" > backend_artifact/imagedefinitions.json
+      - printf '[{"name":"frontend","imageUri":"%s"}]' "$FRONTEND_URI:$IMAGE_TAG" > frontend_artifact/imagedefinitions.json
+      - cat backend_artifact/imagedefinitions.json
+      - cat frontend_artifact/imagedefinitions.json
+
+artifacts:
+  secondary-artifacts:
+    BackendBuildOutput:
+      base-directory: backend_artifact
+      files:
+        - imagedefinitions.json
+    FrontendBuildOutput:
+      base-directory: frontend_artifact
+      files:
+        - imagedefinitions.json
