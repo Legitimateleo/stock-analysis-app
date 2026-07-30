@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM public.ecr.aws/docker/library/maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn -q -B package -DskipTests
 
 # --- Run stage ---
-FROM eclipse-temurin:21-jre-alpine
+FROM public.ecr.aws/docker/library/eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/parallax-backend-1.0-SNAPSHOT.jar app.jar
 
