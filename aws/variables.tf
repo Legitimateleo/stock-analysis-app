@@ -48,13 +48,3 @@ variable "frontend_container_port" {
   type    = number
   default = 8501
 }
-
-variable "deploy_user_name" {
-  description = "Your name/handle, appended to the deploy IAM user's name"
-  type        = string
-}
-
-variable "viewer_user_name" {
-  description = "Teammate's name/handle, appended to the read-only IAM user's name"
-  type        = string
-}

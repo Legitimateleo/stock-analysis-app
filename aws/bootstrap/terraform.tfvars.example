@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (in bootstrap/) and fill in.
+# bootstrap/terraform.tfvars is gitignored — safe for real values,
+# though these two aren't secrets anyway (just name labels).
+
+aws_region   = "us-east-1"
+project_name = "parallax"
+
+deploy_user_name = "leo"      # your name/handle
+viewer_user_name = "shawdy"   # teammate's name/handle

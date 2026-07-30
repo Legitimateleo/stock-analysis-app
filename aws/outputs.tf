@@ -20,10 +20,4 @@ output "codepipeline_name" {
   value = aws_codepipeline.main.name
 }
 
-output "deploy_user_name" {
-  value = aws_iam_user.deploy.name
-}
 
-output "viewer_user_name" {
-  value = aws_iam_user.viewer.name
-}
