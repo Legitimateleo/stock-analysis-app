@@ -43,3 +43,10 @@ aws/terraform.tfstate*
 aws/terraform.tfvars
 aws/bootstrap/.terraform/
 aws/bootstrap/terraform.tfstate*
+
+gcp/.terraform/
+gcp/terraform.tfstate*
+gcp/terraform.tfvars
+gcp/bootstrap/.terraform/
+gcp/bootstrap/terraform.tfstate*
+gcp/bootstrap/terraform.tfvars
