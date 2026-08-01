@@ -38,8 +38,13 @@ frontend/.env
 
 # Docker Compose reads this at the project root — contains real API keys
 .env
-!.env.exampleaws/.terraform/
+!.env.example
+
+aws/.terraform/
 aws/terraform.tfstate*
 aws/terraform.tfvars
 aws/bootstrap/.terraform/
 aws/bootstrap/terraform.tfstate*
+aws/bootstrap/terraform.tfvars
+scripts/.deployment_started_at
+.envrc
