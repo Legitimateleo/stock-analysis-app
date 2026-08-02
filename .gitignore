@@ -48,3 +48,11 @@ aws/bootstrap/terraform.tfstate*
 aws/bootstrap/terraform.tfvars
 scripts/.deployment_started_at
 .envrc
+azure/terraform.tfvars
+azure/bootstrap/terraform.tfvars
+azure/.terraform/
+azure/bootstrap/.terraform/
+azure/*.tfstate
+azure/*.tfstate.*
+azure/bootstrap/*.tfstate
+azure/bootstrap/*.tfstate.*
